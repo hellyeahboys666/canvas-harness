@@ -140,18 +140,21 @@
  function drawPreferences(saved){
   if(popupClosed)return;
   const data={...saved};for(const [key,item]of pending)data[key]=item.value;
-  const settings=data,pet={enabled:data.pet},name='Biscuit',dark=settings.theme==='dark';
+  const settings=data,pet={enabled:data.pet,animal:data.petAnimal},name='Biscuit',dark=settings.theme==='dark';
   document.documentElement.dataset.theme=dark?'dark':'light';
   $('look-value').textContent=(dark?'Dark':'Light')+' · '+({gentle:'lively drawings',still:'still drawings',off:'motion off'}[settings.motion]||'lively drawings');
   for(const input of all('[data-preference]')){input.disabled=false;if(input.type==='radio')input.checked=input.value===settings[input.dataset.preference];else input.value=settings[input.dataset.preference]??0;}
   $('night-art-control').hidden=!dark;$('night-art-value').textContent=(settings.nightArt||0)+'%';
   $('pet-enabled').checked=pet.enabled!==false;$('pet-enabled').disabled=false;
   $('pony-value').textContent=(pet.enabled!==false?'On':'Off')+' · '+name;$('pony-name').textContent=name;
-  const art=$('pony-art');if(!art.firstChild)art.innerHTML=ReservePetArt.svg();art.dataset.gear=pet.gear||'full';
-  const coat=ReservePetArt.COATS[pet.coat]||ReservePetArt.COATS.oat;
+  // the companion is drawn as the animal chosen on this browser, in that animal's first coat
+  const art=$('pony-art'),mini=document.querySelector('.row-pet'),animal=Object.hasOwn(ReservePetArt.ANIMALS,pet.animal??'')?pet.animal:'pony';
+  for(const node of [art,mini])if(node&&(!node.firstChild||(node.dataset.animal||'pony')!==animal)){node.innerHTML=ReservePetArt.svg({title:'',animal});node.dataset.animal=animal;}
+  art.dataset.gear=pet.gear||'full';
+  const coat=ReservePetArt.paint(animal,pet.coat);
   for(const [part,color]of Object.entries(coat))if(part!=='label')art.style.setProperty('--pet-'+part,color);
   art.style.setProperty('--pet-harness',ReservePetArt.HARNESS[pet.harness]||ReservePetArt.HARNESS.red);
-  const mini=document.querySelector('.row-pet');if(mini){for(const [part,color]of Object.entries(coat))if(part!=='label')mini.style.setProperty('--pet-'+part,color);mini.style.setProperty('--pet-harness',ReservePetArt.HARNESS[pet.harness]||ReservePetArt.HARNESS.red);mini.classList.toggle('is-off',pet.enabled===false);}
+  if(mini){for(const [part,color]of Object.entries(coat))if(part!=='label')mini.style.setProperty('--pet-'+part,color);mini.style.setProperty('--pet-harness',ReservePetArt.HARNESS[pet.harness]||ReservePetArt.HARNESS.red);mini.classList.toggle('is-off',pet.enabled===false);}
  }
  async function chooseSchool(value){
   let next;try{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||url.port)throw Error();next=url.origin;}catch{return;}

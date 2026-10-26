@@ -165,7 +165,7 @@ test('audit: mounted dashboard follows device appearance and Make it yours write
  }
  f.events.change({target:{dataset:{rdField:'pet',key:'enabled'},type:'checkbox',checked:true}});await f.idle();
  assert.equal(f.element.dataset.theme,'light');
- assert.deepEqual(copy(f.disk.values.get('reserve:appearance')),{theme:'light',motion:'still',nightArt:30,pet:true,sceneTheme:''});
+ assert.deepEqual(copy(f.disk.values.get('reserve:appearance')),{theme:'light',motion:'still',nightArt:30,pet:true,petAnimal:'pony',sceneTheme:''});
  assert.deepEqual(copy(f.disk.values.get('reserve:v1:'+ORIGIN+':7')),before);
  assert.ok(f.disk.writes.length>=4);assert.ok(f.disk.writes.every(write=>write.key==='reserve:appearance'));
 });

@@ -155,14 +155,14 @@ function extract(root=ROOT,options={}){
   if(c.family==='pet-pose')return /make-pose/.test(pane);
   return true;
  });
- const petTab=tabs.get('pet')||'Pony',homeTab=tabs.get('layout')||'Home',courseTab=tabs.get('courses')||'Courses';
+ const petTab=tabs.get('pet')||'Companion',homeTab=tabs.get('layout')||'Home',courseTab=tabs.get('courses')||'Courses';
  for(const c of rows){
   if(['setting','setting-value'].includes(c.family)){
    const label=exposed.get(c.key).label;c.label=c.family==='setting'?label:label+' = '+(c.value===''?'None':String(c.value));
    c.ui={path:c.key==='showGrades'?['Home','Show grades']:['Make it yours',section(c.key),label,...(c.family==='setting-value'?[c.value===''?'None':String(c.value)]:[])]};
    // A legacy saved option is not an available choice in the public editor.
    if(c.key==='theme'&&c.family==='setting')c.values=c.values.filter(v=>v!=='system');
-  }else if(['pet','pet-value'].includes(c.family))c.ui={path:['Make it yours',petTab,petLabels.get(c.key)||({enabled:'Keep a pony',name:'Name'})[c.key]||words(c.key),...(c.family==='pet-value'?[String(c.value)]:[])]};
+  }else if(['pet','pet-value'].includes(c.family))c.ui={path:['Make it yours',petTab,petLabels.get(c.key)||({enabled:'Keep a companion',name:'Name'})[c.key]||words(c.key),...(c.family==='pet-value'?[String(c.value)]:[])]};
   else if(c.family==='art-slot'){c.label=artLabels.get(c.key)||c.label;c.ui={path:['Make it yours',courseTab,'Customize course',c.label]};}
   else if(c.family==='appearance'||c.family==='appearance-value'){const label=artLabels.get(c.key)||words(c.key);c.label=label+(c.family==='appearance-value'?' = '+c.value:'');c.ui={path:['Make it yours',courseTab,label,...(c.family==='appearance-value'?[c.value]:[])]};}
   else if(c.family==='layout-preset')c.ui={path:['Make it yours',homeTab,'Layout presets',words(c.key)]};

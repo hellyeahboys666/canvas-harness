@@ -5,7 +5,7 @@ const plain=value=>JSON.parse(JSON.stringify(value)),png=Buffer.from('iVBORw0KGg
 const theme={format:'chtheme',version:1,name:'Garden',colors:{light:{bg:'#ffffff',surface:'#ffffff',ink:'#111111',muted:'#444444',line:'#cccccc',accent:'#0055aa'}}};
 function open(h){return h.env.ReserveStorage.createStore({...owner,adapter:{read:async name=>(await h.local.get(name))[name],write:(name,value)=>h.local.set({[name]:value})}});}
 async function sourceBackup(){
- const h=worker({indexedDB:indexedMemory(),saved:{'reserve:appearance':{theme:'dark',motion:'still',nightArt:11,pet:false,sceneTheme:'sea'}}});h.env.ReservePackMedia={prepare:async(blob,slot,name)=>({asset:{mediaId:webcrypto.randomUUID(),name,type:'image/png',kind:'image',width:1,height:1,palette:[]},blob:new Blob([png],{type:'image/png'})})};
+ const h=worker({indexedDB:indexedMemory(),saved:{'reserve:appearance':{theme:'dark',motion:'still',nightArt:11,pet:false,petAnimal:'pony',sceneTheme:'sea'}}});h.env.ReservePackMedia={prepare:async(blob,slot,name)=>({asset:{mediaId:webcrypto.randomUUID(),name,type:'image/png',kind:'image',width:1,height:1,palette:[]},blob:new Blob([png],{type:'image/png'})})};
  const asset={name:'Pixel.png',type:'image/png',data:png.toString('base64'),sha256:createHash('sha256').update(png).digest('hex')},kit={version:1,name:'Checked kit',assets:{bannerArt:asset,titleArt:asset},accent:'clay',font:'system',bannerSize:'standard',bannerFit:'contain',bannerPosition:'right',titlePlacement:'separate'};
  assert.deepEqual(await h.request(message('kit',kit,'checked-kit')),{ok:true});const pool=h.env.ReserveMedia.createPackStore(owner),[savedKit]=await pool.listKits();pool.close();
  const store=open(h);await store.load();await store.update(data=>{data.settings.overviewArt.bannerArt=savedKit.appearance.bannerArt;data.tasks['1']={notes:'Portable note'};});
@@ -56,7 +56,7 @@ for(const mutation of ['digest','source','undo','owner','device-preferences','in
 });
 
 test('public first account load seeds device appearance before backup publication',async()=>{
- const h=worker({indexedDB:indexedMemory()});assert.equal(h.data['reserve:appearance'],undefined);const store=open(h);await store.load();assert.deepEqual(h.data['reserve:appearance'],{theme:'light',motion:'gentle',nightArt:0,pet:true,sceneTheme:''});assert.deepEqual(h.data[key],{version:1,settings:{coursePrefs:{},overviewArt:{}}});store.destroy();
+ const h=worker({indexedDB:indexedMemory()});assert.equal(h.data['reserve:appearance'],undefined);const store=open(h);await store.load();assert.deepEqual(h.data['reserve:appearance'],{theme:'light',motion:'gentle',nightArt:0,pet:true,petAnimal:'pony',sceneTheme:''});assert.deepEqual(h.data[key],{version:1,settings:{coursePrefs:{},overviewArt:{}}});store.destroy();
 });
 
 async function canvasDestination(h,mode){

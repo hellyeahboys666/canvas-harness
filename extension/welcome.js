@@ -547,6 +547,7 @@
   petNode.style.setProperty('--pet-shade',coat.shade);
   petNode.style.setProperty('--pet-mane',coat.mane);
   petNode.style.setProperty('--pet-muzzle',coat.muzzle);
+  petNode.style.setProperty('--pet-face',coat.face||'');
   petNode.style.setProperty('--pet-harness',ReservePetArt.HARNESS[p.harness]||ReservePetArt.HARNESS.red);
   petNode.dataset.gear=p.gear;
   if(!petNode.firstElementChild||(petNode.dataset.animal||'pony')!==p.animal){petNode.innerHTML=ReservePetArt.svg({title:name,animal:p.animal});petNode.dataset.animal=p.animal;}
@@ -683,7 +684,7 @@
    applyPreferences(prefs.get());
    $('pet-enabled').checked=before;
    petSwitch.classList.toggle('is-on',before);
-   notice('Could not save your pony setting. Try again.',true);
+   notice('Could not save your companion setting. Try again.',true);
   }finally{
    setBusy(false);
    if(focused&&!finished&&current()==='companion')input.focus({preventScroll:true});

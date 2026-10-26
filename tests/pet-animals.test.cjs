@@ -110,3 +110,70 @@ test('choosing another animal redraws the companion in place; the same choice do
   f.setPet({enabled:true,roam:'page',animal:'dragon'});f.controller.sync();assert.match(node.html,/data-animal="pony"/);
  }finally{f.controller.destroy();}
 });
+
+test('the animal is a device appearance choice, like the companion switch, so the popup can draw it',()=>{
+ const Prefs=require('../extension/page-preferences.js');
+ assert.deepEqual(Prefs.ANIMALS,ANIMALS,'the device record knows the same animals as the drawing');
+ assert.equal(Prefs.fromData({settings:{},pet:{animal:'fox'}}).petAnimal,'fox');
+ for(const animal of [undefined,'dragon','__proto__',['cat']])assert.equal(Prefs.fromData({settings:{},pet:{animal}}).petAnimal,'pony');
+ const data={settings:{theme:'dark'},pet:{name:'Biscuit',animal:'fox',enabled:true}};
+ assert.equal(Prefs.apply(structuredClone(data),{...Prefs.fromData(data),petAnimal:'panda'}).pet.animal,'panda');
+ assert.equal(Object.hasOwn(Prefs.personal(data).pet,'animal'),false,'it is kept on the device, not written into the account record');
+ assert.deepEqual(Prefs.patch({petAnimal:'cat'}),{petAnimal:'cat'});assert.throws(()=>Prefs.patch({petAnimal:'dragon'}),/petAnimal/);
+});
+
+test('a settings pack can choose the animal along with coat and harness',async()=>{
+ const Preset=require('../extension/preset-pack.js'),pack=data=>({format:'chpreset',version:1,name:'Preset',kind:'settings',data});
+ const {pack:ok}=await Preset.validate(pack({pet:{animal:'cat',coat:'ink'}})),out=Preset.apply({settings:{},pet:{name:'Biscuit',xp:40}},ok);
+ assert.equal(out.pet.animal,'cat');assert.equal(out.pet.coat,'ink');assert.equal(out.pet.xp,40);
+ assert.match((await Preset.problems(pack({pet:{animal:'dragon'}}))).join('\n'),/pet\.animal/);
+});
+
+test('on a coat too dark for ink, the face is drawn in a light color so the eyes still show',()=>{
+ assert.match(A.COATS.ink.face,/^#[0-9A-F]{6}$/i);for(const coat of Object.keys(A.COATS))if(coat!=='ink')assert.equal(A.COATS[coat].face,undefined,coat);
+ for(const animal of ANIMALS){const svg=A.svg({animal});assert.match(svg,/class="pet-smile"[^>]*stroke="var\(--pet-face,var\(--pet-ink,#141413\)\)"/,animal);}
+ assert.match(A.svg(),/<g class="pet-eye"><circle[^>]*fill="var\(--pet-face,/);
+ const f=fixture({animal:'cat'});try{assert.equal(f.node.style['--pet-face'],'');f.setPet({enabled:true,roam:'page',animal:'cat',coat:'ink'});f.controller.sync();assert.equal(f.node.style['--pet-face'],A.COATS.ink.face);}finally{f.controller.destroy();}
+});
+
+test('each animal has its own habit, and every habit rests between moves and stops in sleep',()=>{
+ const habits={cat:['pet-ear','pet-whisk'],bunny:['pet-ear','pet-ear2','pet-nose','pet-whisk'],fox:['pet-ear','pet-swish'],panda:['pet-sway'],hamster:['pet-whisk','pet-cheek']};
+ for(const [animal,parts] of Object.entries(habits))for(const cls of parts)assert.match(A.svg({animal}),new RegExp(`class="${cls}" style="transform-origin:[\\d.]+px [\\d.]+px"`),`${animal} ${cls}`);
+ for(const name of ['pet-twitch','pet-sniff','pet-whisk','pet-swish','pet-sway']){
+  const frames=css.match(new RegExp(`@keyframes ${name}\\{(.*?)\\}\\}`))?.[1];assert.ok(frames,name);
+  assert.match(frames,/^0%,\d+%(?:,100%)?\{/,`${name} holds still for most of its loop, so the film clock skips it`);
+ }
+ assert.match(css,/\.pet\[data-pose=stand\] \.pet-svg\[data-animal=panda\] \.pet-sway\{animation:pet-sway/,'only the panda wobbles, and only standing');
+ const asleep=css.match(/([^}]*)\{animation:none\}/g).find(rule=>rule.includes('[data-pose=sleep] .pet-ear'));
+ for(const cls of ['pet-ear','pet-ear2','pet-nose','pet-whisk','pet-swish'])assert.ok(asleep?.includes(`.pet[data-pose=sleep] .${cls}`),`${cls} stops in sleep`);
+ assert.match(css,/\.pet\[data-pose=eat\] \.pet-cheek\{animation:pet-munch/);
+});
+
+test('stroking it shows hearts for a moment; a touch, a drag or a single pass does not',()=>{
+ for(const animal of ANIMALS)assert.equal(count(A.svg({animal}),'pet-hearts'),1,animal);
+ const f=fixture({animal:'bunny'});
+ try{
+  f.advance(2000);const node=f.node,pass=(xs,extra={})=>{for(const x of xs){f.advance(40);node.emit('pointermove',{clientX:x,clientY:300,pointerType:'mouse',buttons:0,...extra});}};
+  pass([100,140,180,220]);assert.notEqual(node.dataset.petted,'true','one pass across is not a stroke');
+  f.advance(1000);pass([100,160,220,160,100],{pointerType:'touch'});assert.notEqual(node.dataset.petted,'true','touch moves the page, not the pet');
+  f.advance(1000);pass([100,160,220,160,100],{buttons:1});assert.notEqual(node.dataset.petted,'true','a held button is a drag');
+  f.advance(1000);pass([100,160,220,160,100]);assert.equal(node.dataset.petted,'true');
+  f.advance(1700);assert.equal(node.dataset.petted,'false','the hearts are gone after a moment');
+  assert.equal(f.controller.pet.xp,0,'petting changes nothing that is saved');
+ }finally{f.controller.destroy();}
+});
+
+test('resting, it tips its head toward a pointer nearby and back again once it is gone',()=>{
+ const f=fixture({animal:'cat'});
+ try{
+  f.advance(9000);const node=f.node,s=58,head=()=>number(transform(f,'pet-head')),dir=node.dataset.face==='left'?-1:1;
+  assert.ok(['stand','flag','lie'].includes(node.dataset.pose),node.dataset.pose);
+  const before=head();
+  f.doc.emit('pointermove',{clientX:node._x+dir*s*2,clientY:node._y-s*2.5,pointerType:'mouse'});f.advance(800);
+  assert.ok(head()<before-3,`looks up toward a pointer above: ${before} → ${head()}`);
+  f.advance(4000);assert.ok(Math.abs(head()-before)<.5,`and back once the pointer has gone quiet: ${head()}`);
+  f.doc.emit('pointermove',{clientX:node._x-dir*s*3,clientY:node._y-s*2.5,pointerType:'mouse'});f.advance(800);
+  assert.ok(Math.abs(head()-before)<.5,'a pointer behind it is not followed');
+  f.doc.emit('keydown',{key:'a'});f.advance(800);assert.ok(Math.abs(head()-before)<.5,'a key press has no position to look at');
+ }finally{f.controller.destroy();}
+});

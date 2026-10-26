@@ -1420,9 +1420,9 @@ test('external artwork preferences survive later theme and pony writes',async t=
  const h=fixture({reduced:true,savedValues:{'reserve:appearance':{theme:'dark',nightArt:15}}});t.after(()=>h.cleanup());await reachStep(h,'appearance');
  await h.chrome.storage.local.set({'reserve:appearance':{theme:'dark',motion:'still',nightArt:86,pet:false}});await settle();
  h.document.querySelector('[data-theme-choice="light"]').fire('click');await settle();
- assert.deepEqual({...h.storage['reserve:appearance']},{theme:'light',motion:'still',nightArt:86,pet:false,sceneTheme:''});
+ assert.deepEqual({...h.storage['reserve:appearance']},{theme:'light',motion:'still',nightArt:86,pet:false,petAnimal:'pony',sceneTheme:''});
  await h.next();const checkbox=h.ids.get('pet-enabled');checkbox.checked=true;checkbox.fire('change');await settle();
- assert.deepEqual({...h.storage['reserve:appearance']},{theme:'light',motion:'still',nightArt:86,pet:true,sceneTheme:''});
+ assert.deepEqual({...h.storage['reserve:appearance']},{theme:'light',motion:'still',nightArt:86,pet:true,petAnimal:'pony',sceneTheme:''});
 });
 
 test('finish celebration starts only from the real finish-board and uses its top-center point',async()=>{
@@ -1724,7 +1724,7 @@ for(const outcome of ['success','failure'])test('saving the focused pony switch 
  assert.equal(blurs,1,'disabling the focused native input simulates the browser blur');assert.notEqual(h.document.activeElement,checkbox);
  await settle();assert.equal(checkbox.disabled,false);assert.equal(h.document.activeElement?.id,'pet-enabled','unlocking the switch restores focus for keyboard continuation');
  assert.equal(checkbox.checked,outcome==='failure');assert.equal(h.ids.get('pet-switch').classList.contains('is-on'),checkbox.checked);
- if(outcome==='failure')assert.match(h.ids.get('status').textContent,/Could not save your pony setting/);
+ if(outcome==='failure')assert.match(h.ids.get('status').textContent,/Could not save your companion setting/);
 });
 
 test('the welcome uses a decorative logo, hidden product name and drawn progress with every layout control',()=>{

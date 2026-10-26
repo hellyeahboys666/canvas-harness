@@ -98,6 +98,34 @@
 .pet[data-pose=fall] .lh, .pet[data-pose=fall] .lh2{transform:rotate(22deg)}
 .pet[data-pose=fall] .pet-tail{animation:none;transform:rotate(-30deg)}
 
+/* each animal's own habit, now and then: an ear flicks, a nose sniffs, whiskers twitch, a fox's tail swishes, a
+   panda wobbles on its feet, a hamster's cheeks fill while it eats. Long still stretches between the moves, like the
+   blink, so pets.js writes nothing while they rest. Asleep, they stop. */
+.pet-ear{animation:pet-twitch 6.2s ease-in-out infinite}
+.pet-ear2{animation:pet-twitch 6.2s ease-in-out 2.3s infinite}
+.pet-nose{animation:pet-sniff 3.2s ease-in-out infinite}
+.pet-whisk{animation:pet-whisk 4.4s ease-in-out infinite}
+.pet-swish{animation:pet-swish 7.4s ease-in-out infinite}
+.pet[data-pose=stand] .pet-svg[data-animal=panda] .pet-sway{animation:pet-sway 8.2s ease-in-out infinite}
+.pet[data-pose=eat] .pet-cheek{animation:pet-munch .5s ease-in-out infinite alternate}
+.pet[data-pose=sleep] .pet-ear, .pet[data-pose=sleep] .pet-ear2, .pet[data-pose=sleep] .pet-nose, .pet[data-pose=sleep] .pet-whisk, .pet[data-pose=sleep] .pet-swish{animation:none}
+@keyframes pet-twitch{0%,86%,100%{transform:rotate(0)}89%{transform:rotate(-16deg)}92%{transform:rotate(0)}95%{transform:rotate(-9deg)}98%{transform:rotate(0)}}
+@keyframes pet-sniff{0%,58%,100%{transform:scale(1)}66%,82%{transform:scale(1.3,.75)}74%,90%{transform:scale(1)}}
+@keyframes pet-whisk{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-8deg)}90%{transform:rotate(5deg)}95%{transform:rotate(0)}}
+@keyframes pet-swish{0%,78%,100%{transform:rotate(0)}85%{transform:rotate(-18deg)}92%{transform:rotate(9deg)}}
+@keyframes pet-sway{0%,62%,100%{transform:rotate(0)}70%{transform:rotate(-3deg)}80%{transform:rotate(3deg)}90%{transform:rotate(-1.5deg)}}
+@keyframes pet-munch{from{transform:scale(1.3)}to{transform:scale(1.45,1.3)}}
+
+/* petted: hearts rise from its head and it closes its eyes for a moment */
+.pet-hearts{display:none}
+.pet-hearts path{transform-box:fill-box;transform-origin:center}
+.pet[data-petted=true] .pet-hearts{display:block}
+.pet[data-petted=true] .pet-hearts path{animation:pet-heart 1.4s ease-out both}
+.pet[data-petted=true] .pet-hearts .h2{animation-delay:.25s}
+.pet[data-petted=true] .pet-eye{animation:none;opacity:0}
+.pet[data-petted=true] .pet-lid{animation:none;opacity:1}
+@keyframes pet-heart{0%{opacity:0;transform:translate(0,3px) scale(.6)}25%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(1.5px,-9px) scale(.9)}}
+
 /* stillness on request */
 @media (prefers-reduced-motion:reduce){.pet *{animation:none!important;transition:none!important}}
 .pet[data-still=true] *{animation:none!important;transition:none!important}

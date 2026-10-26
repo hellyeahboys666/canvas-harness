@@ -11,9 +11,11 @@
   sage:{label:'Sage',coat:'#C9D4B4',shade:'#A9B890',mane:'#5E7F45',muzzle:'#F0D6C8'},
   rose:{label:'Rose',coat:'#F3D3D0',shade:'#E0B3B0',mane:'#A84A5C',muzzle:'#F8E3DC'}
  };
+ // A coat too dark for ink to show on also names a face color: the eyes, nose and smile are drawn in it instead.
+ COATS.ink.face='#F1E9DA';
  const HARNESS={red:'#E2463B',clay:'#D97757',gold:'#E2B865',forest:'#5E7F45',ocean:'#3F8FCC',iris:'#8E63B8'};
  const POSES=['stand','walk','trot','lie','sleep','read','eat','cheer','flag','fall','held'];
- const INK='var(--pet-ink,#141413)';
+ const INK='var(--pet-ink,#141413)',FACE='var(--pet-face,var(--pet-ink,#141413))';
  const ink=(d,w=2.1,extra='')=>`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${extra}/>`;
  const fill=(d,paint,w=2.1,extra='')=>`<path d="${d}" fill="${paint}" stroke="${INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${extra}/>`;
  const leg=(cls,x,top,foot,bend)=>`<g class="pet-leg ${cls}" style="transform-origin:${x}px ${top}px"><path d="M${x} ${top}C${x+bend} ${top+6} ${foot-bend*.4} ${top+11} ${foot} 57.4" fill="none" stroke="${INK}" stroke-width="4.8" stroke-linecap="round"/><path d="M${x} ${top}C${x+bend} ${top+6} ${foot-bend*.4} ${top+11} ${foot} 57.4" fill="none" stroke="var(--pet-coat)" stroke-width="2.3" stroke-linecap="round"/><path d="M${foot-1.9} 58.6h4.2" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/></g>`;
@@ -25,6 +27,10 @@
  const book=(x=0,y=0)=>`<g class="pet-book"${at(x,y)}><path d="M52 55.6L59 53.6L66 55.6L66 59.4L59 57.6L52 59.4z" fill="#FBF6EA" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/><path d="M59 53.6V57.6M54 56.6l3.4-.9M61 55.8l3.4.9" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/></g>`;
  const zz=(x=0,y=0)=>`<g class="pet-zz" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"${at(x,y)}><path class="z1" d="M60 40h4l-4 4.4h4"/><path class="z2" d="M65.4 31.4h3l-3 3.4h3"/></g>`;
  const sparks=`<g class="pet-sparks" fill="#E2B865" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"><path class="s1" d="M10 14l1.6 3.4L15 19l-3.4 1.6L10 24l-1.6-3.4L5 19l3.4-1.6z"/><path class="s2" d="M66 26l1.1 2.3L69.4 29.4L67.1 30.5L66 32.8L64.9 30.5L62.6 29.4L64.9 28.3z"/><path class="s3" d="M30 6l1 2.1L33.1 9.1L31 10.1L30 12.2L29 10.1L26.9 9.1L29 8.1z"/></g>`;
+ // shown for a moment when it is petted; drawn in the head so they rise from wherever the head is
+ const hearts=(x,y)=>`<g class="pet-hearts"${at(x,y)} fill="#E86F6F" stroke="${INK}" stroke-width="1" stroke-linejoin="round"><path class="h1" d="M0 1.4C-1.4-.6-4 .6-2.8 2.8L0 5.4L2.8 2.8C4 .6 1.4-.6 0 1.4z"/><path class="h2" d="M6 -1.4C4.9-3 2.8-2 3.8-.3L6 1.8L8.2-.3C9.2-2 7.1-3 6-1.4z"/></g>`;
+ // a part that moves on its own now and then (an ear, a nose, a tail, cheeks), turning about (x, y)
+ const part=(cls,x,y,inner)=>`<g class="${cls}" style="transform-origin:${x}px ${y}px">${inner}</g>`;
  const bowl=`<path d="M54 57.4C54 54.6 64 54.6 64 57.4L62.6 60H55.4z" fill="#D4A27F" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>`;
  function pony(title){
   // 72 x 64 box; the ground is y = 60; the pony faces right. Mirroring is done by the wrapper, never here.
@@ -52,11 +58,12 @@
     <path d="M58.6 16.6C61.6 15.2 64.4 16.6 64 19.4C63.4 22 60.4 23.4 57.6 23z" fill="var(--pet-muzzle)"/>
     ${ink('M49 12.2C52.6 7.8 61 9.4 63.4 14.4C65.4 18.8 62.2 23.4 57 23.2C51.8 23 46.6 18 49 12.2z')}
     ${fill('M53.2 9.4L55.2 3.2L58.4 8.6z','var(--pet-coat)',2)}
-    <g class="pet-eye"><circle cx="56.2" cy="14.8" r="1.45" fill="${INK}"/><circle cx="56.7" cy="14.3" r=".45" fill="#FFFFFF"/></g>
-    <path class="pet-lid" d="M54.4 15.2C55.4 16.2 57 16.2 58 15.2" fill="none" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/>
-    <circle cx="62" cy="18.6" r=".8" fill="${INK}"/>
-    <path class="pet-smile" d="M58.8 21.2C60 21.8 61.2 21.6 62.2 20.8" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>
+    <g class="pet-eye"><circle cx="56.2" cy="14.8" r="1.45" fill="${FACE}"/><circle cx="56.7" cy="14.3" r=".45" fill="#FFFFFF"/></g>
+    <path class="pet-lid" d="M54.4 15.2C55.4 16.2 57 16.2 58 15.2" fill="none" stroke="${FACE}" stroke-width="1.3" stroke-linecap="round"/>
+    <circle cx="62" cy="18.6" r=".8" fill="${FACE}"/>
+    <path class="pet-smile" d="M58.8 21.2C60 21.8 61.2 21.6 62.2 20.8" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>
     ${fill('M51.6 8.4C49 10.4 47.4 13 47.6 16.4C49.8 15 51.6 12.6 52.6 9.6z','var(--pet-mane)',1.8)}
+    ${hearts(57,0)}
     <g class="pet-flag"><path d="M62.6 20.4L67.6 3.6" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/><path d="M67.6 3.6L71.4 6.6L66.4 9.4z" fill="var(--pet-note,#E2B865)" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/></g>
    </g>
    ${fill('M50.6 12.6C46.6 15.4 43 20.6 41.2 27.6C38.6 24.6 39.4 17.6 43.6 12.8C46 10.2 49.4 9.8 50.6 12.6z','var(--pet-mane)',2.2)}
@@ -80,22 +87,24 @@
   const h=57.4-top;
   return `<g class="pet-leg ${cls}" style="transform-origin:${x}px ${top}px">${tube(`M${x} ${top}C${r2(x+bend)} ${r2(top+h*.4)} ${r2(foot-bend*.4)} ${r2(top+h*.75)} ${foot} 57.4`,w,core,paint)}<ellipse cx="${r2(foot+.4+long)}" cy="58.3" rx="${r2(w/2+long)}" ry="1.5" fill="${paint}" stroke="${INK}" stroke-width="1.4"/></g>`;
  };
- const eye=(x,y,lid=INK)=>`<g class="pet-eye"><circle cx="${x}" cy="${y}" r="1.45" fill="${INK}"/><circle cx="${r2(x+.5)}" cy="${r2(y-.5)}" r=".45" fill="#FFFFFF"/></g><path class="pet-lid" d="M${r2(x-1.8)} ${r2(y+.4)}C${r2(x-.8)} ${r2(y+1.4)} ${r2(x+.8)} ${r2(y+1.4)} ${r2(x+1.8)} ${r2(y+.4)}" fill="none" stroke="${lid}" stroke-width="1.3" stroke-linecap="round"/>`;
+ const eye=(x,y,lid=FACE)=>`<g class="pet-eye"><circle cx="${x}" cy="${y}" r="1.45" fill="${FACE}"/><circle cx="${r2(x+.5)}" cy="${r2(y-.5)}" r=".45" fill="#FFFFFF"/></g><path class="pet-lid" d="M${r2(x-1.8)} ${r2(y+.4)}C${r2(x-.8)} ${r2(y+1.4)} ${r2(x+.8)} ${r2(y+1.4)} ${r2(x+1.8)} ${r2(y+.4)}" fill="none" stroke="${lid}" stroke-width="1.3" stroke-linecap="round"/>`;
  const collar=(d,x,y,w=6.6,core=3.6)=>`<path class="pet-collar" d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/><path class="pet-collar" d="${d}" fill="none" stroke="var(--pet-harness)" stroke-width="${core}" stroke-linecap="round"/><circle class="pet-collar" cx="${x}" cy="${y}" r="1.5" fill="#E2B865" stroke="${INK}" stroke-width=".9"/>`;
  const blanket=(d,stripes)=>`<path class="pet-blanket" d="${d}" fill="var(--pet-harness)" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><path class="pet-blanket" d="${stripes}" fill="none" stroke="#FFFFFF" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>`;
  // the note it carries when something is due, held in the mouth at (x, y)
  const flag=(x,y)=>{const tx=r2(x+5),ty=r2(y-16.8);return `<g class="pet-flag" style="transform-origin:${x}px ${y}px"><path d="M${x} ${y}L${tx} ${ty}" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/><path d="M${tx} ${ty}L${r2(tx+3.8)} ${r2(ty+3)}L${r2(tx-1.2)} ${r2(ty+5.8)}z" fill="var(--pet-note,#E2B865)" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/></g>`;};
- const whiskers=d=>ink(d,.9,' opacity=".55"');
+ const whiskers=d=>`<path d="${d}" fill="none" stroke="${FACE}" stroke-width=".9" stroke-linecap="round" opacity=".55"/>`;
  const rig=(title,animal,p)=>`${open(title,animal,ANIMALS[animal].sink)}
 <g class="pet-all">
  <g class="pet-up">
+  <g class="pet-sway" style="transform-origin:34px 58px">
   <g class="pet-legs">${p.backLegs}</g>
   <g class="pet-tuck2">${p.tuck2||''}</g>
   <g class="pet-tail" style="transform-origin:${p.tailAt}">${p.tail}</g>
   <g class="pet-body">${p.body}</g>
   <g class="pet-legs">${p.legs}</g>
   <g class="pet-tuck">${p.tuck}</g>
-  <g class="pet-neck" style="transform-origin:${p.neckAt}">${p.neck}<g class="pet-head" style="transform-origin:${p.headAt}">${p.head}</g></g>
+  <g class="pet-neck" style="transform-origin:${p.neckAt}">${p.neck}<g class="pet-head" style="transform-origin:${p.headAt}">${p.head}${p.hearts}</g></g>
+  </g>
  </g>
  ${p.book}
  <g class="pet-oats">${p.treat}</g>
@@ -122,12 +131,13 @@
    neck:fill('M41 35.6C42 31 44.6 27.8 48.4 26L54.4 30.8C51.8 33 50.2 36.4 49.6 40.4C46.2 40.4 42.8 38.6 41 35.6z',COAT)+collar('M42.2 33.4C45 35 47.6 37 49.4 39.6',45.8,36.2,5.8,3.2),
    headAt:'52px 29px',
    head:fill('M46.6 20.4L46.2 11.8L52.4 16.2z',COAT,2)+fill(head,COAT)
-    +fill('M55.4 16.6L60 9.4L61.8 18.6z',COAT,2)+shape('M57.2 15.8L59.6 12.4L60.4 17z',MUZZLE)
+    +part('pet-ear',58.6,17.6,fill('M55.4 16.6L60 9.4L61.8 18.6z',COAT,2)+shape('M57.2 15.8L59.6 12.4L60.4 17z',MUZZLE))
     +`<path d="M50.6 17.6l.8 2.6M53.4 16.8l.4 2.8" fill="none" stroke="${MANE}" stroke-width="1.5" stroke-linecap="round"/>`
     +eye(56.8,22.8)
     +`<path d="M60.8 25.2L62.8 25.3L61.8 26.6z" fill="${MUZZLE}" stroke="${INK}" stroke-width=".9" stroke-linejoin="round"/>`
-    +`<path class="pet-smile" d="M60 27.6C60.6 28.4 61.4 28.2 61.8 27.2C62.2 28.2 63 28.4 63.4 27.6" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`
-    +whiskers('M63.2 25.6l4.2-.8M63.4 27l4 .6')+flag(61.8,28.6),
+    +`<path class="pet-smile" d="M60 27.6C60.6 28.4 61.4 28.2 61.8 27.2C62.2 28.2 63 28.4 63.4 27.6" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>`
+    +part('pet-whisk',63,26.4,whiskers('M63.2 25.6l4.2-.8M63.4 27l4 .6'))+flag(61.8,28.6),
+   hearts:hearts(55,7),
    book:book(),
    treat:bowl+`<path d="M56.6 55.6C58.2 53.8 61 53.8 62.4 55.6C61 57 58.2 57 56.6 55.6z" fill="#9FB8C8" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/><path d="M56.6 55.6L54.8 54.4V56.8z" fill="#9FB8C8" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/>`,
    zz:zz(0,-6)
@@ -150,12 +160,13 @@
    neckAt:'44px 41px',
    neck:fill('M40.6 36.8C41.6 33 44 30.6 47.2 29.6L52.2 33.6C50 35.4 48.8 38 48.4 41.4C45.4 41.2 42.4 39.6 40.6 36.8z',COAT)+collar('M41.6 35.4C44 36.6 46.4 38.4 48.2 40.6',44.6,37.6,5.6,3.2),
    headAt:'52px 31px',
-   head:fill('M48.6 22.6C46.4 16.4 46 9.8 48.6 6.6C51.6 8.6 53 15 52.6 21.6z',COAT,2)+fill(head,COAT)
-    +fill('M53 21.2C53.4 14.2 55.6 8 58.8 6C60.8 9.4 59.4 16 56.4 22z',COAT,2)+shape('M55.2 18.4C55.8 13.6 57 10.6 58.2 9.4C58.8 11.8 58.2 15.4 56.6 19.2z',MUZZLE)
+   head:part('pet-ear2',50.6,21.6,fill('M48.6 22.6C46.4 16.4 46 9.8 48.6 6.6C51.6 8.6 53 15 52.6 21.6z',COAT,2))+fill(head,COAT)
+    +part('pet-ear',54.8,21.6,fill('M53 21.2C53.4 14.2 55.6 8 58.8 6C60.8 9.4 59.4 16 56.4 22z',COAT,2)+shape('M55.2 18.4C55.8 13.6 57 10.6 58.2 9.4C58.8 11.8 58.2 15.4 56.6 19.2z',MUZZLE))
     +eye(55.8,26.6)+`<ellipse cx="57.6" cy="30.6" rx="1.7" ry="1" fill="${MUZZLE}"/>`
-    +`<path d="M60.2 28.4L62 28.5L61.1 29.7z" fill="${MUZZLE}" stroke="${INK}" stroke-width=".9" stroke-linejoin="round"/>`
-    +`<path class="pet-smile" d="M59.6 31C60.2 31.6 60.8 31.4 61.1 30.4C61.5 31.4 62.1 31.6 62.6 31" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`
-    +whiskers('M62.2 29.4l3.6-.6M62.4 30.6l3.4.6')+flag(61.4,31),
+    +part('pet-nose',61.1,28.9,`<path d="M60.2 28.4L62 28.5L61.1 29.7z" fill="${MUZZLE}" stroke="${INK}" stroke-width=".9" stroke-linejoin="round"/>`)
+    +`<path class="pet-smile" d="M59.6 31C60.2 31.6 60.8 31.4 61.1 30.4C61.5 31.4 62.1 31.6 62.6 31" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>`
+    +part('pet-whisk',62.2,30,whiskers('M62.2 29.4l3.6-.6M62.4 30.6l3.4.6'))+flag(61.4,31),
+   hearts:hearts(51,4),
    book:book(),
    treat:`<path d="M53.6 58.6L64 55.4C65.4 55.2 66 56.6 65 57.6L54.4 60z" fill="#E8925A" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/><path d="M57.4 58.4l.6-1.2M60.4 57.4l.6-1.2" fill="none" stroke="${INK}" stroke-width=".9" stroke-linecap="round"/><path d="M65 55.8l2.4-2.8M65.6 56.6l3-1" fill="none" stroke="#5E7F45" stroke-width="1.6" stroke-linecap="round"/>`,
    zz:zz(-1,-2)
@@ -169,7 +180,7 @@
    backLegs:paw('lf2',40,43.6,39.6,.8,sock)+paw('lh2',26.4,43.6,26.8,-.8,sock),
    tuck2:tube('M40 45.6C44 47.4 47.6 47.8 51 47.6',5,2.2,MANE),
    tailAt:'20px 37px',
-   tail:shape(tail,COAT)+shape('M4.6 40.6C3.4 45.4 6 50.2 10.6 50.2C9.4 47.6 9.4 45 10.4 42.6C8.6 41 6.6 40.4 4.6 40.6z',MUZZLE)+ink(tail,2.2),
+   tail:part('pet-swish',20,37,shape(tail,COAT)+shape('M4.6 40.6C3.4 45.4 6 50.2 10.6 50.2C9.4 47.6 9.4 45 10.4 42.6C8.6 41 6.6 40.4 4.6 40.6z',MUZZLE)+ink(tail,2.2)),
    body:fill('M21 34.6C28 31.8 38.6 31.6 45 33.4C49.2 34.8 50 40.2 47 43.2C42.8 46.6 30.2 46.8 23.2 45C17.4 43.4 16.4 37.8 21 34.6z',COAT)
     +shape('M23.6 43.6C30 45.8 40.4 45.4 45.6 42.4C42 46 30.6 46.4 24.2 44.8z',SHADE)
     +blanket('M28 32.6C31.6 31.8 35.6 31.8 39 32.4L38 38.8C34.6 39.6 31.4 39.4 29 38.6z','M30.4 34.6h5.8M30.8 36.8h4.8'),
@@ -182,10 +193,11 @@
    headAt:'52px 26px',
    head:fill('M47.6 19.4L46.8 9.4L53.2 15.2z',COAT,2)+shape(head,COAT)
     +shape('M51.6 26.6C55 27.6 60.4 27.6 66.4 27.4L58.6 29.2C55 31.2 50 30.8 47.6 28.2C48.8 27.4 50.2 26.8 51.6 26.6z',MUZZLE)+ink(head)
-    +fill('M54.6 16.4L57.8 7.4L60.8 18.4z',COAT,2)+shape('M56.6 15.6L57.8 11.4L59 16.4z',MUZZLE)
+    +part('pet-ear',57.6,17.4,fill('M54.6 16.4L57.8 7.4L60.8 18.4z',COAT,2)+shape('M56.6 15.6L57.8 11.4L59 16.4z',MUZZLE))
     +eye(57.4,21.2)+`<circle cx="67" cy="25.6" r="1.1" fill="${INK}"/>`
-    +`<path class="pet-smile" d="M61.8 26.2C62.8 26.8 64 26.6 64.8 26" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`
+    +`<path class="pet-smile" d="M61.8 26.2C62.8 26.8 64 26.6 64.8 26" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>`
     +flag(64.4,27.6),
+   hearts:hearts(52,5),
    book:book(2,0),
    treat:bowl+`<g fill="#C2413A" stroke="${INK}" stroke-width=".9"><circle cx="57" cy="55.4" r="1.3"/><circle cx="61.2" cy="55.4" r="1.3"/><circle cx="59.1" cy="54.6" r="1.3"/></g>`,
    zz:zz(0,-4)
@@ -212,8 +224,9 @@
     +shape('M54 23.4C55 20.8 58.6 20.6 59.6 23C60.4 25.2 58.4 27.6 56 27.2C54.4 26.9 53.4 25.2 54 23.4z',MANE)
     +`<g class="pet-eye"><circle cx="56.9" cy="23.6" r="1.45" fill="#FFFFFF"/><circle cx="57.2" cy="23.7" r=".8" fill="${INK}"/></g><path class="pet-lid" d="M55.2 24C56.2 25 57.8 25 58.8 24" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>`
     +`<path d="M61 27.2C61.8 26.6 63.2 26.8 63.4 27.6C63.2 28.4 61.8 28.6 61 28z" fill="${INK}"/>`
-    +`<path class="pet-smile" d="M59.8 29.8C60.6 30.6 61.6 30.4 62.2 29.6" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`
+    +`<path class="pet-smile" d="M59.8 29.8C60.6 30.6 61.6 30.4 62.2 29.6" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>`
     +flag(61.6,30),
+   hearts:hearts(52,8),
    book:book(),
    treat:tube('M52.6 58.6L66.4 55',4.2,2.4,'#9DBF6E')+ink('M57 57.8l-.6-2.4M61.6 56.6l-.6-2.4',1)+fill('M64 55.6C65.4 53 67.6 52.2 69.6 52.6C68.4 54.6 66.4 55.8 64 55.6z','#7FA65A',1.1),
    zz:zz(0,-3)
@@ -237,11 +250,12 @@
    headAt:'53px 34px',
    head:`<circle cx="46.8" cy="25.6" r="2.8" fill="${COAT}" stroke="${INK}" stroke-width="1.8"/>`+shape(head,COAT)
     +shape('M43.4 29.4C45 25.4 49 23.4 53.4 23.4C56.8 23.6 59.6 25 61.2 27.2C57.6 27.4 54.6 28.6 52.4 30.6C49.2 32.4 45.6 31.8 43.4 29.4z',MANE)+ink(head)
-    +ink('M54.6 39.4C57.8 40.6 61 39.4 62.2 36.6',1.1,' opacity=".55"')
+    +part('pet-cheek',57.6,38.6,shape('M53.6 37.4C55.6 35.2 60.6 35 62.2 36.8C62.6 39.2 60.6 41 57.6 41C55.2 41 53.4 39.6 53.6 37.4z',COAT)+ink('M54.6 39.4C57.8 40.6 61 39.4 62.2 36.6',1.1,' opacity=".55"'))
     +`<circle cx="56.4" cy="24.4" r="3" fill="${COAT}" stroke="${INK}" stroke-width="1.8"/><circle cx="56.6" cy="24.6" r="1.5" fill="${MUZZLE}"/>`
     +eye(56.4,30.6)+`<circle cx="62.2" cy="32.8" r=".9" fill="${MUZZLE}" stroke="${INK}" stroke-width=".8"/>`
-    +`<path class="pet-smile" d="M60.4 35.2C60.9 35.8 61.6 35.7 62 35" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`
-    +whiskers('M63 33.6l3.4-.6M63 34.8l3.2.6')+flag(61.6,35.6),
+    +`<path class="pet-smile" d="M60.4 35.2C60.9 35.8 61.6 35.7 62 35" fill="none" stroke="${FACE}" stroke-width="1" stroke-linecap="round"/>`
+    +part('pet-whisk',63,34.2,whiskers('M63 33.6l3.4-.6M63 34.8l3.2.6'))+flag(61.6,35.6),
+   hearts:hearts(51,15),
    book:book(),
    treat:`<g fill="#4A4744" stroke="${INK}" stroke-width=".8"><ellipse cx="55.6" cy="58.8" rx="1.7" ry=".9"/><ellipse cx="59" cy="59" rx="1.7" ry=".9" transform="rotate(-14 59 59)"/><ellipse cx="62.4" cy="58.8" rx="1.7" ry=".9"/><ellipse cx="57.4" cy="57.4" rx="1.7" ry=".9" transform="rotate(10 57.4 57.4)"/><ellipse cx="60.8" cy="57.4" rx="1.7" ry=".9"/></g><path d="M54.6 58.8h1.8M58 59.2l1.8-.4M61.4 58.8h1.8M56.4 57.2l1.8.3M59.8 57.4h1.8" fill="none" stroke="#FBF6EA" stroke-width=".5" stroke-linecap="round"/>`,
    zz:zz(-2,2)

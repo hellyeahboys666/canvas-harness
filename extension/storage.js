@@ -47,7 +47,7 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
   function personal(data) {
     const out={...data,settings:{...data.settings},pet:{...data.pet}};
     for(const key of ['theme','motion','nightArt','sceneTheme'])delete out.settings[key];
-    delete out.pet.enabled;return out;
+    delete out.pet.enabled;delete out.pet.animal;return out;
   }
   function validDay(value) {return /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;}
   function instant(value) {

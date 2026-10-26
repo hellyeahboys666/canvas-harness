@@ -44,7 +44,7 @@ test('closed dock is inert, constant sized and reads no protected settings',()=>
 test('five public tabs build only the requested pane, with legacy aliases',()=>{
  const f=editor();
  assert.deepEqual(Array.from(f.env.ReserveCustomizeUI.tabs(),entry=>Array.from(entry)),[
-  ['look','Look'],['layout','Home'],['courses','Courses'],['pet','Pony'],['settings','More']
+  ['look','Look'],['layout','Home'],['courses','Courses'],['pet','Companion'],['settings','More']
  ]);
  for(const tab of ['look','layout','courses','pet','settings']){
   const html=f.render(tab);

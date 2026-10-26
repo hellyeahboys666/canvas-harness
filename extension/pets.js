@@ -106,7 +106,9 @@
   const engineRows=c=>c?.items?.length?c.items:(Array.isArray(c?.choices)?c.choices.slice(0,3):[]);
   const activeUse=createActivity({now,storage:()=>win.sessionStorage,hidden:()=>doc.hidden});
   // what it is doing: null (resting), a walk, or a jump; and the eased numbers
-  let goal=null,rest='stand',speed=0,phase=0,follow=0,reel=0;const ch={leg:0,down:0,neck:9,head:0,alpha:1};
+  let goal=null,rest='stand',speed=0,phase=0,follow=0,reel=0;const ch={leg:0,down:0,neck:9,head:0,look:0,alpha:1};
+  // where the pointer was last seen (the head tips toward it), and a stroke across the companion (petting)
+  let pointer={x:NaN,y:NaN,at:-Infinity},stroke={x:NaN,at:-Infinity,travel:0,turns:0,dir:0},pettedTimer=0,pettedAt=-Infinity,lookTimer=0;
   const FILM=1000/24,STEP=1/60,watched=new Set();let geometry=null,dirty=true,layoutFrame=0,layoutTimer=0,layoutVersion=0,resizeWatch=null,layoutWatch=null,life=0,decisionPending=false,layoutAnimations=new WeakSet(),bubbleBox={w:250,h:120};
   const filmNow=()=>win.performance?.now?.()??now(),motionMedia=win.matchMedia?.('(prefers-reduced-motion: reduce)');let motionChange=null;
   const reduced=()=>menuOpen||['off','still'].includes(container.dataset.motionStyle)||!!motionMedia?.matches;
@@ -117,7 +119,7 @@
    layer=doc.createElement('div');layer.className='pet-layer';
    layer.innerHTML=`<button type="button" class="pet" data-pose="stand" data-face="right" aria-haspopup="${Brain()||Parse()?'dialog':'menu'}" aria-expanded="false"></button>`;
    container.append(layer);node=layer.firstElementChild;
-   node.addEventListener('pointerdown',down);node.addEventListener('click',click);node.addEventListener('keydown',key);
+   node.addEventListener('pointerdown',down);node.addEventListener('pointermove',stroked);node.addEventListener('click',click);node.addEventListener('keydown',key);
     for(const type of ['animationstart','animationend','animationcancel'])node.addEventListener(type,resetReels);
    win.addEventListener('scroll',invalidate,{passive:true,capture:true});win.addEventListener('resize',invalidate,{passive:true});
    container.addEventListener('scroll',invalidate,{passive:true,capture:true});   // the workspace column scrolls inside the workspace
@@ -145,7 +147,7 @@
   }
   function unmount(){
    if(!layer)return;closeBubble();stop();clearTimeout(node._cheer);releaseGrab?.();grab=null;goal=null;speed=0;life++;
-   node.removeEventListener('pointerdown',down);node.removeEventListener('click',click);node.removeEventListener('keydown',key);
+   node.removeEventListener('pointerdown',down);node.removeEventListener('pointermove',stroked);node.removeEventListener('click',click);node.removeEventListener('keydown',key);clearTimeout(pettedTimer);clearTimeout(lookTimer);pettedTimer=lookTimer=0;ch.look=0;
     for(const type of ['animationstart','animationend','animationcancel'])node.removeEventListener(type,resetReels);
    motionMedia?.removeEventListener?.('change',motionChange);motionChange=null;
     cancelPlaces();resizeWatch?.disconnect();layoutWatch?.disconnect();resizeWatch=layoutWatch=null;watched.clear();layoutAnimations=new WeakSet();geometry=null;dirty=true;rig=null;
@@ -159,7 +161,7 @@
   }
   function startBrain(){if(Brain()&&!doc.hidden&&!brainTick)brainTick=setInterval(()=>{refreshBrain(true);checkSchedule();offerBreak();offerStretch();maybeNudge();},60000);}
   function saveActivity(){activeUse.flush(now());}
-  function seen(){if(!doc.hidden)activeUse.input(now());lastInput=now();scheduleFollow();if(!reel&&layer&&!doc.hidden&&(reelsDirty||reels.size))roll();if(rest==='sleep'&&!goal&&!menuOpen)settle('lie',4000);}
+  function seen(event){if(Number.isFinite(event?.clientX)&&event.pointerType!=='touch'){pointer={x:event.clientX,y:event.clientY,at:now()};if(node&&!goal&&!grab&&lookTarget()!==ch.look){run();clearTimeout(lookTimer);lookTimer=setTimeout(()=>{lookTimer=0;if(node&&ch.look)run();},3100);}}if(!doc.hidden)activeUse.input(now());lastInput=now();scheduleFollow();if(!reel&&layer&&!doc.hidden&&(reelsDirty||reels.size))roll();if(rest==='sleep'&&!goal&&!menuOpen)settle('lie',4000);}
   function activity(event){scheduleFollow();const type=event.type;if(type==='pointerdown'&&!doc.hidden)activeUse.input(now());if(type==='compositionstart')composing=true;if(type==='compositionend'){composing=false;typingUntil=now()+5000;}if(type==='input'||type==='beforeinput')typingUntil=now()+5000;if(type==='pointerdown'||type==='dragstart')dragging=true;if(['pointerup','pointercancel','dragend'].includes(type))dragging=false;}
   function wake(){activeUse.visibility(now(),doc.hidden);drawCustom();if(doc.hidden){clearInterval(brainTick);brainTick=0;stop();clearTimeout(reel);reel=0;cancelPlaces();releaseGrab?.();if(grab){grab=null;goal=null;speed=0;node.dataset.grabbed='false';setPose('stand');}return;}if(layer){startBrain();refreshBrain(true);invalidate();resetReels();run();if(!goal&&!menuOpen)plan(900);roll();}}
   // THE PONY ON THE FILM CLOCK. Its little loops (the tail, the nod, the blink, breathing, the Zs) are CSS animations.
@@ -226,7 +228,7 @@
   }
   function dress(){
    if(!node)return;refreshDrawing();const c=art.paint(pet.animal,pet.coat);
-   node.style.setProperty('--pet-coat',c.coat);node.style.setProperty('--pet-shade',c.shade);node.style.setProperty('--pet-mane',c.mane);node.style.setProperty('--pet-muzzle',c.muzzle);
+   node.style.setProperty('--pet-coat',c.coat);node.style.setProperty('--pet-shade',c.shade);node.style.setProperty('--pet-mane',c.mane);node.style.setProperty('--pet-muzzle',c.muzzle);node.style.setProperty('--pet-face',c.face||'');
    node.style.setProperty('--pet-harness',art.HARNESS[pet.harness]||art.HARNESS.red);node.style.setProperty('--pet-size',size()+'px');
    node.style.width=custom?size()+'px':'';node.style.height=custom?height()+'px':'';node.style.aspectRatio=custom?`${size()} / ${height()}`:'';
     if(node.dataset.gear!==pet.gear){node.dataset.gear=pet.gear;resetReels();}node.setAttribute('aria-label',`${pet.name}, your ${custom?'companion':art.ANIMALS[pet.animal].label.toLowerCase()}. Open ${pet.name}'s menu`);
@@ -359,7 +361,7 @@
    // in the air, held, or cheering, the stylesheet poses the legs and shadow itself
    const free=pose==='fall'||pose==='held'||pose==='cheer';
    put(p.up,'transform',`translateY(${(down*sink+bob).toFixed(2)}px)`);
-   put(p.neck,'transform',`rotate(${neck.toFixed(2)}deg)`);put(p.head,'transform',`rotate(${ch.head.toFixed(2)}deg)`);
+   put(p.neck,'transform',`rotate(${neck.toFixed(2)}deg)`);put(p.head,'transform',`rotate(${(ch.head+ch.look).toFixed(2)}deg)`);
    for(const el of p.a)put(el,'transform',free?'':`rotate(${leg.toFixed(2)}deg) scaleY(${fold})`);
    for(const el of p.b)put(el,'transform',free?'':`rotate(${(-leg).toFixed(2)}deg) scaleY(${fold})`);
    const standing=clamp((10-down)/2.5,0,1).toFixed(2),lyingDown=clamp((down-7)/3.5,0,1).toFixed(2);
@@ -470,10 +472,33 @@
     }
     if(ease('neck',goal?.type==='walk'&&ch.down<=.6?9:want.neck,5,dt))busy=true;
     if(ease('head',want.head,5,dt))busy=true;
+    if(ease('look',goal?0:lookTarget(),6,dt))busy=true;
     if(pose==='eat'){phase+=dt*4;busy=true;}
    }
    if(ease('alpha',1,3.2,dt))busy=true;
    return busy;
+  }
+  // ---- looking and petting
+  // Resting and awake, it tips its head toward a pointer that moved near it in the last few seconds: up a little
+  // for a pointer above, down for one below. A pointer behind it is not followed (it would have to turn round).
+  function lookTarget(){
+   if(!node||custom||reduced()||!['stand','flag','lie'].includes(pose)||now()-pointer.at>3000||!Number.isFinite(node._x))return 0;
+   const s=size(),dir=face==='left'?-1:1,dx=(pointer.x-(node._x+dir*s*.28))*dir,dy=pointer.y-(node._y-s*.75);
+   if(dx<-s*.3||Math.hypot(dx,dy)>s*6)return 0;
+   return Math.round(clamp(Math.atan2(dy,Math.max(dx,s*.5))*180/Math.PI*.45,-14,12));
+  }
+  // Stroking it (a mouse or pen moved back and forth across it, no button held) shows a few hearts and closes its
+  // eyes for a moment. Nothing is saved and nothing else happens: it is only nice.
+  function stroked(event){
+   if(!node||grab||goal||event.pointerType==='touch'||event.buttons||!Number.isFinite(event.clientX))return;
+   const t=now();if(t-stroke.at>600)stroke={x:event.clientX,at:t,travel:0,turns:0,dir:0};
+   const dx=event.clientX-stroke.x,dir=Math.sign(dx);stroke.at=t;stroke.x=event.clientX;if(!dir)return;
+   stroke.travel+=Math.abs(dx);if(stroke.dir&&dir!==stroke.dir)stroke.turns++;stroke.dir=dir;
+   if(stroke.travel>=size()*1.6&&stroke.turns>=1&&t-pettedAt>2600)petted();
+  }
+  function petted(){
+   pettedAt=now();stroke.travel=stroke.turns=0;node.dataset.petted='true';resetReels();clearTimeout(pettedTimer);
+   pettedTimer=setTimeout(()=>{pettedTimer=0;if(node){node.dataset.petted='false';resetReels();}},1600);
   }
   // ---- picking it up
   function down(event){
@@ -574,7 +599,7 @@
     else if(result?.message)afterSlip(result.message,{reload:result.reload,suggestions:result.suggestions});
     else if(!ok)afterSlip(['setting','preset','navigate','bookmark'].includes(choice.intent)?'That feature is off or unavailable. Check Make it yours → Features.':'Unavailable');
    }
-   async function runPet(fields){if(fields.action==='treat')return treat();if(fields.action==='home'){const ok=await save({...pet,roam:'home'},current=>({...current,roam:'home'}));if(ok!==false)plan(300);return ok!==false;}if(fields.action==='hide'){snooze(fields.minutes);return true;}if(fields.action==='quiet'){return (await save({...pet,nudges:'quiet'},current=>({...current,nudges:'quiet'})))!==false;}if(fields.action==='off'){afterSlip('The Pony switch is in the extension popup → Pony.');return false;}if(fields.action==='settings'){if(!actions.settings)return false;return (await actions.settings())!==false;}return false;}
+   async function runPet(fields){if(fields.action==='treat')return treat();if(fields.action==='home'){const ok=await save({...pet,roam:'home'},current=>({...current,roam:'home'}));if(ok!==false)plan(300);return ok!==false;}if(fields.action==='hide'){snooze(fields.minutes);return true;}if(fields.action==='quiet'){return (await save({...pet,nudges:'quiet'},current=>({...current,nudges:'quiet'})))!==false;}if(fields.action==='off'){afterSlip('The Companion switch is in the extension popup → Companion.');return false;}if(fields.action==='settings'){if(!actions.settings)return false;return (await actions.settings())!==false;}return false;}
    async function runAsk(result){if(result.action==='remind'||result.action==='routine'){const key=result.action==='remind'?'reminders':'routines',limit=20,entry={...result.data,id:newId(),createdAt:now(),...(key==='routines'?{last:''}:{})};let added=false;const version=bubbleVersion;try{const ok=await save({...pet,[key]:[...pet[key],entry].slice(0,limit)},current=>{const list=key==='reminders'?Ask().cleanReminders(current[key],now()):Ask().cleanRoutines(current[key]);if(list.length>=limit)return current;added=true;return {...current,[key]:[...list,entry]};});const stored=ok!==false&&(added||pet[key].some(v=>v.id===entry.id));if(!dead&&stored&&version===bubbleVersion)say('Saved.');return stored;}catch{return false;}}try{await actions[result.action]?.(result.data);}catch{}}
    function useSchedule(later){const offer=scheduled;if(!offer)return;closeBubble();if(offer.type==='reminder'){const at=Number(offer.occurrence),change=current=>({...current,reminders:current.reminders.flatMap(r=>r.id!==offer.id||r.at!==at?[r]:later?[{...r,at:now()+600000}]:[])});void save(change(pet),change);return;}if(!later&&offer.action!=='remind')void runAsk(offer);}
   function summary(data){

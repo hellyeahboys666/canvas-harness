@@ -155,7 +155,7 @@
   if(request.id?!known.has(request.id)||typeof request.on!=='boolean'||request.preset!==undefined:!['full','lite'].includes(request.preset)||request.on!==undefined)throw Error('Invalid feature choice.');
   let next;
   if(request.id){
-   if(keepPony&&request.id==='pony'&&!request.on)throw Error('The Pony switch is in the extension popup → Pony.');
+   if(keepPony&&request.id==='pony'&&!request.on)throw Error('The Companion switch is in the extension popup → Companion.');
    const selected=new Set(before.preset==='custom'?before.custom:resolve(before).enabled);
    if(request.on)selected.add(request.id);else{const removed=new Set([request.id]);let size;do{size=removed.size;for(const row of catalogue)if(row.needs.some(id=>removed.has(id)))removed.add(row.id);}while(size!==removed.size);for(const id of removed)selected.delete(id);}
    next=normalize({preset:'custom',custom:[...selected]});

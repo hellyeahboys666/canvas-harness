@@ -12,13 +12,13 @@
   handin:{hint:'Work to hand in, with local completion choices.'},
   today:{hint:'What you planned for today and what is due. Tick things off, add your own.'},
   week:{hint:'Seven days at a glance: how much is on each one.'},
-  timer:{hint:'A 15 to 60 minute focus session. Your pony studies with you.'},
+  timer:{hint:'A 15 to 60 minute focus session. Your companion studies with you.'},
   clock:{hint:'The time, the date, and how long until the next thing is due.'},
   notes:{hint:'A scratchpad that saves as you type.'},
   bookmarks:{hint:'The assignments and materials you bookmarked.'},
   grades:{hint:'Current course grades. Follows the Show grades switch.'},
   messages:{hint:'How many messages are unread, and a way in.'},
-  pet:{hint:'Home for your pony: treats, level, and where it rests.'}
+  pet:{hint:'Home for your companion: treats, level, and where it rests.'}
  };
  const FRAMES=[['pen','Pen line','A hand-drawn line round each module.'],['stitch','Stitched','A row of stitches, like a strap.'],['card','Card','A soft card with a little shadow.'],['line','Thin rule','A plain hairline.'],['none','None','No outline: modules sit on the page.']];
  // Small drawings for the gallery and the module headings: one pen, 24 units, no fills that need a theme.
@@ -209,7 +209,7 @@ ${enabled('customization')?`<div class="rd-gallery-frames" role="radiogroup" ari
   }
   async function featureCommand(request){
    const F=root.ReserveFeatures;if(!F||!root.chrome?.storage?.local)return {ok:false,message:'Features are unavailable. Reload Canvas.'};
-   if(request.id==='ai')return clarify('That feature is unavailable in the public companion controls.');if(request.id&&typeof request.on!=='boolean')return clarify('Choose on or off for that feature.');if(request.id==='pony'&&!request.on)return {ok:false,message:'The Pony switch is in the extension popup → Pony.'};
+   if(request.id==='ai')return clarify('That feature is unavailable in the public companion controls.');if(request.id&&typeof request.on!=='boolean')return clarify('Choose on or off for that feature.');if(request.id==='pony'&&!request.on)return {ok:false,message:'The Companion switch is in the extension popup → Companion.'};
    if(request.id&&!F.catalogue.some(row=>row.id===request.id)||!request.id&&!['full','lite'].includes(request.preset))return false;
    const validate=recording?.validate||executionValidation;let saved;try{validate?.();saved=await F.change(request.id?{id:request.id,on:request.on}:{preset:request.preset},{keepPony:true});}catch(error){return {ok:false,message:error.message};}
    const {before,value:next}=saved;requestedFeatures=request.id?F.resolve(next).enabled:null;

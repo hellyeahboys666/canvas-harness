@@ -9,7 +9,7 @@
   const m=customize(),enums={...appearanceEnums,...m.enums},booleans=[...new Set([...Object.keys(m.defaults).filter(key=>typeof m.defaults[key]==='boolean'),'showGrades'])],input=c.record(value,[...Object.keys(enums),...booleans,'nightArt','pet'],'$.data'),out={};
   for(const [key,v]of Object.entries(input)){
    if(key==='pet'){
-    const pet=c.record(v,['coat','harness'],'$.data.pet');out.pet={};const art=c.attempt('$.data.pet',()=>model('ReservePetArt','pet-art'));if(art){if(C.own(pet,'coat'))out.pet.coat=c.choice(pet.coat,Object.keys(art.COATS),'$.data.pet.coat');if(C.own(pet,'harness'))out.pet.harness=c.choice(pet.harness,Object.keys(art.HARNESS),'$.data.pet.harness');}if(!Object.keys(pet).length)c.add('$.data.pet','provide a coat or harness');
+    const pet=c.record(v,['animal','coat','harness'],'$.data.pet');out.pet={};const art=c.attempt('$.data.pet',()=>model('ReservePetArt','pet-art'));if(art){if(C.own(pet,'animal'))out.pet.animal=c.choice(pet.animal,Object.keys(art.ANIMALS),'$.data.pet.animal');if(C.own(pet,'coat'))out.pet.coat=c.choice(pet.coat,Object.keys(art.COATS),'$.data.pet.coat');if(C.own(pet,'harness'))out.pet.harness=c.choice(pet.harness,Object.keys(art.HARNESS),'$.data.pet.harness');}if(!Object.keys(pet).length)c.add('$.data.pet','provide an animal, coat or harness');
    }else if(key==='nightArt')out[key]=Math.round(c.number(v,'$.data.'+key,0,100));
    else if(booleans.includes(key)){if(typeof v!=='boolean')c.add('$.data.'+key,'expected a boolean');out[key]=v;}
    else if(key==='accent'&&typeof v==='string'&&/^#[a-f0-9]{6}$/i.test(v))out[key]=v.toLowerCase();

@@ -448,3 +448,11 @@ test('quick keyboard steps on the night slider save the last value even while ea
  assert.equal(h.saved['reserve:appearance'].nightArt,53);assert.equal(Number(slider.value),53);assert.equal(h.ids.get('night-art-value').textContent,'53%');
  h.cleanup();
 });
+test('the popup draws the companion as the animal chosen on this browser, in that animal\'s own first coat',async()=>{
+ const Art=require('../extension/pet-art.js');
+ for(const [stored,animal]of [[undefined,'pony'],['fox','fox'],['panda','panda'],['dragon','pony']]){
+  const h=fixture({savedValues:{'reserve:appearance':{theme:'light',motion:'gentle',nightArt:0,pet:true,...(stored?{petAnimal:stored}:{}),sceneTheme:''}}});await settle();
+  const art=h.ids.get('pony-art');assert.match(art.html,new RegExp(`data-animal="${animal}"`),String(stored));assert.equal(art.dataset.animal,animal);
+  assert.equal(art.style['--pet-coat'],Art.paint(animal,'oat').coat);h.cleanup();
+ }
+});

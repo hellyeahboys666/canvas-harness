@@ -31,13 +31,13 @@ test('supported appearance and grade visibility values remain executable and typ
 });
 
 test('companion roaming and size preserve Controls UI-only value handoffs',()=>{
- for(const [text,section,value]of [['let my pet roam everywhere','Where it goes','page'],['confine my companion to home','Where it goes','home'],['stop my pet wandering','Where it goes','off'],['make my companion small','Size','small'],['set pet size to medium','Size','medium'],['make my pet larger','Size','large']])handoff(text,['Make it yours','Pony',section,value]);
+ for(const [text,section,value]of [['let my pet roam everywhere','Where it goes','page'],['confine my companion to home','Where it goes','home'],['stop my pet wandering','Where it goes','off'],['make my companion small','Size','small'],['set pet size to medium','Size','medium'],['make my pet larger','Size','large']])handoff(text,['Make it yours','Companion',section,value]);
 });
 
 test('companion nudges distinguish supported executable values from the off handoff',()=>{
  expect('set pet nudges to helpful','setting',{key:'pet.nudges',value:'helpful'});
  expect('make companion tips quiet','setting',{key:'pet.nudges',value:'quiet'});
- handoff('turn pet nudges off',['Make it yours','Pony','Reminders','off']);
+ handoff('turn pet nudges off',['Make it yours','Companion','Reminders','off']);
 });
 
 test('companion visibility retains the boolean setting contract',()=>{
