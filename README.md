@@ -36,6 +36,7 @@ Canvas shows you everything. Canvas Harness shows you what to do next. It replac
 - Mark up PDFs with strike-through, highlighter pen, text boxes, shapes and redo. The Marks list jumps to each mark; Copy as notes and Download .md make a study sheet from text marks. Thanks to @garywu000 for #51 and @HarryX081125 for #53. [PDF tools](docs/pdf-reader.md).
 - **Changes** in the toolbar shows observed deadline changes and an unread count. Full includes it; Lite leaves it out. History stays local to each Canvas account. Thanks to @garywu000 for #52. [Deadline changes](docs/deadline-changes.md).
 - Make it yours groups controls into Look, Home, Courses, your companion and More, and remembers where you left it. Course artwork is in Courses; file imports and Start over are in More.
+- How much shows: **Simple** (the default for new students) leads Home with the one assignment to do next and leaves out course news, filters and previews; **Advanced** adds them back; **Developer** also shows diagnostics and Canvas IDs for bug reports. Switch it at the top of Make it yours (in Lite, in the command bar), and keep any single item on or off under Home → What shows. Students who used Canvas Harness before start on Advanced, the page they already know.
 
 ## Also in 3.4
 

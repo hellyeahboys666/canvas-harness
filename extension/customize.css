@@ -448,3 +448,75 @@
 
 .rd[data-course-navigation=dock][data-courses=true] .rd-shell {grid-template-columns:minmax(0,1fr);gap:22px;}
 @media (max-width:800px) {.rd[data-course-navigation=dock][data-courses=true] .rd-shell {display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;}}
+
+/* How much shows: Simple, Advanced or Developer (customization-model.js VIEW_ITEMS). dashboard.js lists the items the
+   level leaves out in [data-hide]; items with an older switch (bookmarks, course information, deadline previews) are
+   left out where they are built, and the rest are hidden here. */
+.rd[data-hide~=weekStrip] .rd-week,
+.rd[data-hide~=moreViews] .rd-more-views,
+.rd[data-hide~=excerpts] .rd-assignment-excerpt,
+.rd[data-hide~=readyNote] .rd-ready-note,
+.rd[data-hide~=planTab] .rd-reader-tabs,
+.rd[data-hide~=googleDoc] .rd-doc-button,
+.rd[data-hide~=googleDoc] .rd-doc-note,
+.rd[data-hide~=deadlineChanges] .rd-deadline-trigger,
+.rd[data-hide~=editHome] .rd-board-edit,
+.rd[data-hide~=editHome] .rd-workspace > [data-rd-action=board-edit],
+.rd[data-hide~=bookmarks] .rd-row-actions [data-rd-action=pin],
+.rd[data-hide~=bookmarks] .rd-reader-actions [data-rd-action=pin],
+.rd[data-hide~=selectTools] .rd-reader-actions [data-rd-action=select-item],
+.rd[data-hide~=shortcuts] .rd-search kbd,
+.rd[data-hide~=shortcuts] .rd-search-hint,
+.rd[data-hide~=shortcuts] .rd-toolbox-trigger kbd,
+.rd[data-hide~=explanations] .rd-field-hint,
+.rd[data-hide~=explanations] .rd-grade-privacy,
+.rd[data-hide~=explanations] .rd-grade-note,
+.rd[data-hide~=explanations] .rd-plan-tip,
+.rd[data-hide~=explanations] .rd-message-prompt,
+.rd[data-hide~=explanations] .ch-gpa__hint,
+.rd[data-hide~=shortcuts] .rd-quick-keys,
+.rd[data-hide~=cacheNotes] .rd-material-footnote { display: none !important; }
+/* The selection circle keeps its place in the row, so titles stay in line; it only stops being a control. */
+.rd[data-hide~=selectTools] .rd-assignment > [data-rd-action=select-item] { visibility: hidden; pointer-events: none; }
+.rd[data-hide~=editHome] .rd-arrange-guide:not(:has([data-rd-action=arrange-undo], [data-rd-action=arrange-restore])) { display: none; }
+
+/* Simple's summary: the next assignment, as large as the reader's title, with Open in Canvas as the one filled button. */
+.rd .rd-next-up { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin: 0 0 18px; padding: 18px 22px 18px 20px; border: 1.5px solid color-mix(in srgb, var(--rd-course) 45%, var(--rd-line)); border-left-width: 6px; border-radius: 16px; background: color-mix(in srgb, var(--rd-course) 7%, var(--rd-surface)); }
+.rd .rd-next-up[data-empty=true] { border-color: var(--rd-line); border-left-width: 1.5px; background: var(--rd-surface); color: var(--rd-muted); }
+.rd .rd-next-up[data-empty=true] p { margin: 0; }
+.rd .rd-next-up[data-empty=true] strong { color: var(--rd-ink); }
+.rd .rd-next-up-text { min-width: 0; flex: 1 1 320px; }
+.rd .rd-next-up-when { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--rd-muted); }
+.rd .rd-next-up-when > span { text-transform: uppercase; letter-spacing: .08em; font-size: 11.5px; color: var(--rd-course-ink); }
+.rd .rd-next-up-when[data-tone=overdue], .rd .rd-next-up-when[data-tone=soon] { color: var(--tone); }
+.rd .rd-next-up h2 { margin: 0; font-family: var(--rd-heading-font); font-size: 26px; line-height: 1.22; letter-spacing: -.5px; color: var(--rd-ink); overflow-wrap: anywhere; }
+.rd .rd-next-up-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 6px 0 0; font-size: 13px; color: var(--rd-muted); }
+.rd .rd-next-up-meta .rd-mini { width: 20px; height: 20px; }
+.rd .rd-next-up-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd .rd-next-up-actions .rd-button--primary { min-height: 42px; padding-inline: 18px; font-size: 14.5px; }
+/* With the card leading Simple, the glance chips are the only other count above the list. */
+.rd[data-view-level=simple] .rd-desk-toolbar { margin-top: 2px; }
+
+/* Developer */
+.rd .rd-dev-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; opacity: .8; }
+.rd .rd-diagnostics { margin: 22px 0 8px; padding: 14px 18px; border: 1.5px dashed var(--rd-line-strong, var(--rd-line)); border-radius: 13px; background: var(--rd-surface); font-size: 12px; color: var(--rd-muted); }
+.rd .rd-diagnostics h2 { margin: 0 0 8px; font: 600 12px/1.3 var(--rd-ui-font); text-transform: uppercase; letter-spacing: .08em; color: var(--rd-ink); }
+.rd .rd-diagnostics dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 18px; margin: 0; }
+.rd .rd-diagnostics dl > div { min-width: 0; }
+.rd .rd-diagnostics dt { font-weight: 600; color: var(--rd-ink); }
+.rd .rd-diagnostics dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; overflow-wrap: anywhere; }
+
+/* The level switch at the top of Make it yours, drawn like its tabs. */
+.rd .cz-level { margin: 2px 0 14px; }
+.rd .cz-level > h3 { margin: 0 0 6px; font: 600 15px/1.35 var(--rd-ui-font); color: var(--rd-ink); }
+.rd .cz-levels { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 4px; border-radius: 13px; background: var(--rd-tint); }
+.rd .cz-level-choice { position: relative; display: grid; place-items: center; min-height: 36px; border-radius: 10px; color: var(--rd-muted); font: 500 13.5px/1 var(--rd-ui-font); cursor: pointer; transition: background-color 140ms, color 140ms; }
+.rd .cz-level-choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.rd .cz-level-choice:hover { color: var(--rd-ink); }
+.rd .cz-level-choice:has(input:checked) { background: var(--rd-surface); color: var(--rd-ink); box-shadow: 0 1px 3px #30281920; }
+.rd .cz-level-choice:has(input:checked) strong { font-weight: 600; }
+.rd .cz-level-choice strong { font-weight: 500; }
+.rd .cz-level-choice:has(input:focus-visible) { outline: 2px solid var(--rd-accent); outline-offset: 1px; }
+.rd .cz-level > .cz-note { margin-top: 6px; }
+.rd .cz-subhead { margin: 14px 0 6px; font: 600 12px/1.3 var(--rd-ui-font); text-transform: uppercase; letter-spacing: .07em; color: var(--rd-muted); }
+.rd .cz-group > .cz-subhead:first-of-type { margin-top: 9px; }

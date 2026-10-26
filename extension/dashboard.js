@@ -184,10 +184,12 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
     function sourceChange(){scheduleRender();}
     function scheduleRender(options=null){if(destroyed)return;if(options)pendingRender={...pendingRender,...options};if(!sourceFrame)sourceFrame=beforePaint(()=>{sourceFrame=0;try{render();}catch(error){if(!mounted&&onRenderError)onRenderError(error);else throw error;}});}
     function consumeSources(){if(sourceFrame)cancelPaint(sourceFrame);sourceFrame=0;}
+    let lastRenderMs=NaN;
     function render(options={}){
       if(destroyed)return;if(rendering){scheduleRender(options);return;}
       consumeSources();const next={...pendingRender,...options};pendingRender=null;rendering=true;
-      try{renderNow(next);}finally{rendering=false;}
+      // Developer diagnostics show how long the previous render took.
+      const started=root.performance?.now?.();try{renderNow(next);}finally{rendering=false;if(Number.isFinite(started))lastRenderMs=root.performance.now()-started;}
       if(!mounted){mounted=true;onReady();}
     }
     let focusTimer=0,focusSettling=false,focusDoneUntil=0;// syncFocus
@@ -321,9 +323,13 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
     function openPlanner(options){if(options?.page==='week'&&!enabled('planner')||options?.page==='grades'&&!enabled('grades')||options?.page==='settings'&&!enabled('customization'))return;if(options?.page==='week'&&root.ReservePlannerUI){goWorkspace('plan');return;}onPlanner({...options,...(options?.page==='week'&&personal.focus?.endsAt?{page:'home'}:{}),hideGrades:settings().showGrades!==true});}
 
     function settings(){
-      return {...personal.settings,...(gradeVisibilityOverride===null?{}:{showGrades:gradeVisibilityOverride}),
+      const s={...personal.settings,...(gradeVisibilityOverride===null?{}:{showGrades:gradeVisibilityOverride}),
        ...(!enabled('grades')?{showGrades:false}:{}),...(!enabled('motion')?{motion:'off',livingArt:'off'}:{}),
        ...(!enabled('course-hub')?{showCourseInformation:false}:{}),...(!enabled('course-art')?{courseCardStyle:'rounded',showCourseIcons:false}:{})};
+      // How much shows: an item the level leaves out reads as switched off, so the layout, the arrangement and
+      // the settings switches all agree with the page (customization-model.js viewShows).
+      if(root.ReserveCustomization?.viewShows)for(const entry of root.ReserveCustomization.VIEW_ITEMS)if(entry.key)s[entry.key]=root.ReserveCustomization.viewShows(s,entry.id);
+      return s;
     }
 
     // Saved dark/system preferences render in the original light palette.
@@ -714,9 +720,12 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
       container.dataset.readingFont=ctx.s.readingFont==='interface'?'interface':'book';
       container.dataset.readerOpen=String(readerOpen);
       container.dataset.courses=String(ctx.s.showCourseStrip!==false);
+      // Simple, Advanced or Developer, and the items it leaves out: [data-hide~=…] in levels.css.
+      container.dataset.viewLevel=root.ReserveCustomization?.viewLevel?.(ctx.s)||'simple';
+      container.dataset.hide=root.ReserveCustomization?.viewHidden?.(ctx.s).join(' ')||'';
       if(scene||dataTheme)container.style.removeProperty('--rd-accent');else container.style.setProperty('--rd-accent',ctx.accent);
       const assignmentContent=readingContent(ctx.selected);
-       const markup=View.render({...ctx,state,workspace,workPage:workspace==='work'?workPage:'',gradeImpact,gradeImpactRevision:currentSnapshot.fetchedAt,reviewDeckHTML:workspace==='review'?reviewDeck?.renderReviewDeck()||'':'',gradeQuery,gradeLimit,arrangeOpen:!!arrange?.active(),boardEditing:!!board?.editing(),planUI:board?.planUI()||{},customizeTab,canvasNav,personal:{focus:personal.focus,pet:personal.pet,toolbox:personal.toolbox},hasLayoutUndo:!!ctx.s.workspaceUndo,deckHeader:workspace==='work'?hub?.renderDeckHeader?.(ctx.deckCourse,{arrange:enabled('arrange')})||'':'',deckContent:workspace==='work'?hub?.renderDeck?.(ctx.deckCourse,{header:false})||'':'',hubContent:workspace==='hub'?hub?.renderHub(ctx.courseMap.get(state.courseId),{sharedHeading:true}):workspace==='inbox'?hub?.renderInbox(ctx.courses):'',materialLibrary:workspace==='materials'?materials?.renderLibrary(ctx.courseMap.get(state.courseId),{sharedHeading:true}):'',relatedMaterials:materials?.renderRelated(ctx.selected,assignmentContent.links)||'',readerTab,customizeOpen,customizeCourseId,customizeStatus,customizeBusy,customizeDrafts,customKits,kitName,makeOwn:makeOwn?.state,quickUpload:quickUpload?.state,quickPackDraft,quickPackFileName,quickPackError,quickPackLoading,user:currentSnapshot.user,demo,nativeSwitch:typeof onNative==='function',refreshing,visibleLimit,noteStatus:drafts.has(`notes:${ctx.selected?.id}`)?transientStatus.startsWith('Could not save:')?'Not saved. Retry above.':'Saving note…':ctx.local[ctx.selected?.id]?.notes?'Note saved on this device.':'Notes save automatically.',readerContent:assignmentContent,warning:renderWarning(),status:statusLabel(currentSnapshot,externalStatus,transientStatus)}, {E,icon,assignmentLink,formatDate,dueText,scoreText,gradePeriodLabel,dayKey,complete}, {headingCache,reuseHeading:container.querySelector('.rd-workspace-heading')?.getAttribute('data-rd-key')===`heading-${headingCache.revision}`});
+       const markup=View.render({...ctx,renderMs:lastRenderMs,state,workspace,workPage:workspace==='work'?workPage:'',gradeImpact,gradeImpactRevision:currentSnapshot.fetchedAt,reviewDeckHTML:workspace==='review'?reviewDeck?.renderReviewDeck()||'':'',gradeQuery,gradeLimit,arrangeOpen:!!arrange?.active(),boardEditing:!!board?.editing(),planUI:board?.planUI()||{},customizeTab,canvasNav,personal:{focus:personal.focus,pet:personal.pet,toolbox:personal.toolbox},hasLayoutUndo:!!ctx.s.workspaceUndo,deckHeader:workspace==='work'?hub?.renderDeckHeader?.(ctx.deckCourse,{arrange:enabled('arrange')})||'':'',deckContent:workspace==='work'?hub?.renderDeck?.(ctx.deckCourse,{header:false})||'':'',hubContent:workspace==='hub'?hub?.renderHub(ctx.courseMap.get(state.courseId),{sharedHeading:true}):workspace==='inbox'?hub?.renderInbox(ctx.courses):'',materialLibrary:workspace==='materials'?materials?.renderLibrary(ctx.courseMap.get(state.courseId),{sharedHeading:true}):'',relatedMaterials:materials?.renderRelated(ctx.selected,assignmentContent.links)||'',readerTab,customizeOpen,customizeCourseId,customizeStatus,customizeBusy,customizeDrafts,customKits,kitName,makeOwn:makeOwn?.state,quickUpload:quickUpload?.state,quickPackDraft,quickPackFileName,quickPackError,quickPackLoading,user:currentSnapshot.user,demo,nativeSwitch:typeof onNative==='function',refreshing,visibleLimit,noteStatus:drafts.has(`notes:${ctx.selected?.id}`)?transientStatus.startsWith('Could not save:')?'Not saved. Retry above.':'Saving note…':ctx.local[ctx.selected?.id]?.notes?'Note saved on this device.':'Notes save automatically.',readerContent:assignmentContent,warning:renderWarning(),status:statusLabel(currentSnapshot,externalStatus,transientStatus)}, {E,icon,assignmentLink,formatDate,dueText,scoreText,gradePeriodLabel,dayKey,complete}, {headingCache,reuseHeading:container.querySelector('.rd-workspace-heading')?.getAttribute('data-rd-key')===`heading-${headingCache.revision}`});
       const toolbar=container.querySelector('.rd-toolbar'),appearance=container.querySelector('.rd-appearance');
       if(toolbar){
         // Keep the actual transitioning nodes connected through data renders.
@@ -955,6 +964,9 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
       }
       // Canvas's menu bar is stored where canvas-nav.js and the popup read it; every open Canvas page follows at once.
       if(field==='canvas-nav'){const value=event.target.value;if(!NAV_CHOICES.includes(value))return;canvasNav=value;root.chrome?.storage?.local?.set?.({'reserve:canvasNav':value})?.catch?.(()=>{});return;}
+      // How much shows: Simple, Advanced or Developer, then one item kept on or off whatever the level.
+      if(field==='view-level'){const level=event.target.value;void saveView(s=>root.ReserveCustomization.setViewLevel(s,level));return;}
+      if(field==='view-item'){const item=event.target.dataset.item,on=event.target.checked;void saveView(s=>root.ReserveCustomization.setViewItem(s,item,on));return;}
       if(field==='setting'){
         const key=event.target.dataset.setting;
         if(!['theme','accent','motion','livingArt','readingFont','greeting','font','density','textSize','dashboardLayout','showCourseStrip','showGrades','showRecentGrades',...Object.keys(root.ReserveCustomization?.defaults||{})].includes(key))return;
@@ -1403,6 +1415,10 @@ if(typeof module==='object'&&module.exports&&!globalThis.ReserveSite)require('./
       return false;
     }
 
+    function saveView(change){
+      if(!root.ReserveCustomization?.setViewLevel)return Promise.resolve(false);
+      return savePersonal(data=>{change(data.settings);});
+    }
     function saveAppearance(key,value){
       if(!fieldEnabled({dataset:{rdField:'setting',setting:key}}))return Promise.resolve(false);
         if(key==='showGrades'){
