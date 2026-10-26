@@ -1,9 +1,19 @@
 <!doctype html><meta charset="utf-8"><title>Pet lab</title><link rel="stylesheet" href="../extension/pet.css">
-<style>body{margin:0;padding:18px;background:#FAF9F5;font:12px system-ui;color:#5E5D59}.g{display:grid;grid-template-columns:repeat(6,1fr);gap:16px 10px}.c{display:grid;justify-items:center;gap:4px;padding:26px 0 8px;border-bottom:2px solid #141413}.c span{order:2}.pet{--pet-size:150px}.row2 .pet{--pet-size:60px}.row2 .c{padding-top:10px}</style>
-<div class="g" id="g"></div><div class="g row2" id="h" style="margin-top:26px"></div>
+<style>body{margin:0;padding:18px;background:#FAF9F5;font:12px system-ui;color:#5E5D59}.g{display:grid;grid-template-columns:repeat(6,1fr);gap:16px 10px}.c{display:grid;justify-items:center;gap:4px;padding:26px 0 8px;border-bottom:2px solid #141413}.c span{order:2}.pet{--pet-size:150px}.row2 .pet{--pet-size:60px}.row2 .c{padding-top:10px}
+.zoo{display:grid;grid-template-columns:70px repeat(13,1fr);align-items:end;gap:0 4px;margin-top:30px}.zoo .pet{--pet-size:84px}.zoo b{align-self:center;font-size:13px;color:#141413}.zoo .c{padding:14px 0 4px}.zoo .h{font-weight:600;text-align:center}.coats{grid-template-columns:70px repeat(6,1fr)}.coats .pet{--pet-size:110px}</style>
+<div class="g" id="g"></div><div class="g row2" id="h" style="margin-top:26px"></div><div class="zoo" id="zoo"></div><div class="zoo coats" id="wardrobe"></div>
 <script src="../extension/pet-art.js"></script><script>
-const A=ReservePetArt,coats=Object.keys(A.COATS);
-const mk=(pose,coat='oat',face='right',gear='full',harness='red')=>{const c=A.COATS[coat];return `<div class="c"><div class="pet" data-pose="${pose}" data-face="${face}" data-gear="${gear}" style="--pet-coat:${c.coat};--pet-shade:${c.shade};--pet-mane:${c.mane};--pet-muzzle:${c.muzzle};--pet-harness:${A.HARNESS[harness]}">${A.svg()}</div><span>${pose} · ${coat}</span></div>`};
+const A=ReservePetArt,coats=Object.keys(A.COATS),q=new URLSearchParams(location.search),animal=q.get('animal')||'pony';
+const look=(animal,coat,harness)=>Object.entries(A.paint(animal,coat)).filter(([k])=>k!=='label').map(([k,v])=>`--pet-${k}:${v}`).join(';')+`;--pet-harness:${A.HARNESS[harness]}`;
+const mk=(pose,coat='oat',face='right',gear='full',harness='red',a=animal,extra='',label=`${pose} · ${coat}`)=>`<div class="c"><div class="pet" data-pose="${pose}" data-face="${face}" data-gear="${gear}" style="${look(a,coat,harness)};${extra}">${A.svg({animal:a})}</div><span>${label}</span></div>`;
 g.innerHTML=A.POSES.map(p=>mk(p)).join('')+mk('stand','oat','left');
 h.innerHTML=coats.map((c,i)=>mk(['stand','walk','lie','flag','cheer','read'][i],c,i%2?'left':'right',['full','collar','full','none','full','collar'][i],Object.keys(A.HARNESS)[i])).join('');
+// every animal in every pose; walk and trot are shown mid-stride (the controller swings --pet-leg on the page)
+const cols=[['stand'],['walk','--pet-leg:18','walk'],['walk','--pet-leg:-18','walk ↺'],['trot','--pet-leg:26','trot'],['lie'],['sleep'],['read'],['eat'],['cheer'],['flag'],['fall'],['held'],['stand','','left']];
+zoo.innerHTML='<span></span>'+cols.map(c=>`<span class="h">${c[2]||c[0]}</span>`).join('')+Object.keys(A.ANIMALS).map(a=>`<b>${A.ANIMALS[a].label}</b>`+cols.map(([p,x='',l])=>mk(p,'oat',l==='left'?'left':'right','full','red',a,x,'')).join('')).join('');
+// and every animal in every coat, each with its own harness color
+wardrobe.innerHTML='<span></span>'+coats.map(c=>`<span class="h">${c}</span>`).join('')+Object.keys(A.ANIMALS).map(a=>`<b>${A.ANIMALS[a].label}</b>`+coats.map((c,i)=>mk('stand',c,'right','full',Object.keys(A.HARNESS)[i],a,'',A.paint(a,c).label)).join('')).join('');
+// ?animal=cat draws the big rows as that animal; ?only=big shows just those, larger; ?still holds every loop at its start
+if(q.get('only')==='big'){document.head.insertAdjacentHTML('beforeend','<style>.g{grid-template-columns:repeat(4,1fr)}.g .pet{--pet-size:190px}#h,#zoo{display:none}</style>');}
+if(q.has('still'))requestAnimationFrame(()=>{for(const a of document.getAnimations()){if(a.effect.getTiming().iterations===Infinity){a.pause();a.currentTime=0;}else a.finish();}});
 </script>

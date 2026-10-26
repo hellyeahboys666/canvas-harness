@@ -36,7 +36,7 @@ test('named appearance panes build only their own previews and collection-depend
   assert.equal(f.work.archives,tab==='courses'?1:0);assert.equal(f.work.frames,tab==='look'?1:0);
   assert.equal((html.match(/class="ch-art-slot"/g)||[]).length,tab==='courses'?4:0);
   assert.equal((html.match(/class="ch-course-setting"/g)||[]).length,tab==='courses'?2:0);
-  assert.deepEqual(f.work.previews,tab==='courses'?['render','scene','mini','frame','title']:tab==='pet'?['svg']:[]);
+  assert.deepEqual(f.work.previews,tab==='courses'?['render','scene','mini','frame','title']:tab==='pet'?['svg',...Object.keys(f.env.ReservePetArt.ANIMALS).map(()=>'svg')]:[]);   // the companion, then one small drawing per animal to choose from
  }
  for(const tab of [undefined,'all']){f.context.customizeTab=tab;assert.equal((f.render().match(/class="cz-pane"/g)||[]).length,1);}
  f.context.customizeTab='missing';assert.match(f.render(),/class="cz-pane" data-pane="look"/);

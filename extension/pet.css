@@ -5,6 +5,11 @@
 /* a pony drawn without the controller (the settings picture) takes its pose from these */
 .pet:is([data-pose=lie],[data-pose=read],[data-pose=sleep]){--pet-down:11.5}
 .pet[data-pose=sleep]{--pet-neck:44;--pet-head:18}.pet[data-pose=read]{--pet-neck:29;--pet-head:14}.pet[data-pose=eat]{--pet-neck:60;--pet-head:22}
+/* animals that hold a pose differently from the pony (the same numbers as ANIMALS[...].poses in pet-art.js) */
+.pet[data-pose=eat] .pet-svg[data-animal=cat]{--pet-down:6;--pet-neck:50;--pet-head:16}
+.pet[data-pose=eat] .pet-svg[data-animal=bunny]{--pet-down:7;--pet-neck:40;--pet-head:12}
+.pet[data-pose=eat] .pet-svg[data-animal=panda]{--pet-down:6;--pet-neck:46;--pet-head:14}
+.pet[data-pose=eat] .pet-svg[data-animal=hamster]{--pet-down:8;--pet-neck:34;--pet-head:10}
 .pet-svg{display:block;width:100%;height:100%;overflow:visible;transition:transform .22s ease-in-out}
 .pet[data-face=left] .pet-svg{transform:scaleX(-1)}
 .pet-svg *{transform-box:view-box}
@@ -15,7 +20,7 @@
 
 /* the rig. On the page pets.js writes these transforms straight onto the parts; the variables pose a pony drawn
    without the controller (the settings picture). */
-.pet-up{transform:translateY(calc((var(--pet-down) + var(--pet-bob)) * 1px))}
+.pet-up{transform:translateY(calc((var(--pet-down) * var(--pet-sink,1) + var(--pet-bob)) * 1px))}
 .pet-neck{transform:rotate(calc(var(--pet-neck) * 1deg))}
 .pet-head{transform:rotate(calc(var(--pet-head) * 1deg))}
 /* legs: diagonal pairs swing together; as the body sinks they fold under it and the tucked legs show instead */

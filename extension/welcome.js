@@ -541,15 +541,15 @@
   $('pet-bubble').textContent='Hi, I’m '+name+'!';
   $('pet-enabled').checked=p.enabled!==false;
   petSwitch.classList.toggle('is-on',$('pet-enabled').checked);
-  meadow.setAttribute('aria-label',name+', your pony, walking onto the page');
-  const coat=ReservePetArt.COATS[p.coat]||ReservePetArt.COATS.oat;
+  meadow.setAttribute('aria-label',name+', your '+ReservePetArt.ANIMALS[p.animal].label.toLowerCase()+', walking onto the page');
+  const coat=ReservePetArt.paint(p.animal,p.coat);
   petNode.style.setProperty('--pet-coat',coat.coat);
   petNode.style.setProperty('--pet-shade',coat.shade);
   petNode.style.setProperty('--pet-mane',coat.mane);
   petNode.style.setProperty('--pet-muzzle',coat.muzzle);
   petNode.style.setProperty('--pet-harness',ReservePetArt.HARNESS[p.harness]||ReservePetArt.HARNESS.red);
   petNode.dataset.gear=p.gear;
-  if(!petNode.firstElementChild)petNode.innerHTML=ReservePetArt.svg({title:name});
+  if(!petNode.firstElementChild||(petNode.dataset.animal||'pony')!==p.animal){petNode.innerHTML=ReservePetArt.svg({title:name,animal:p.animal});petNode.dataset.animal=p.animal;}
   else petNode.querySelector('svg')?.setAttribute('aria-label',name);
  }
  function applyPreferences(data){

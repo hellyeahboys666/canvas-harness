@@ -139,15 +139,18 @@
 
   const pony=()=>{
    if(!enabled('pony'))return '';const P=root.ReservePets,A=root.ReservePetArt;if(!P||!A)return '';
-   const pet=P.clean(c.personal?.pet),lv=P.level(pet.xp),coat=A.COATS[pet.coat]||A.COATS.oat,style=`--pet-coat:${coat.coat};--pet-shade:${coat.shade};--pet-mane:${coat.mane};--pet-muzzle:${coat.muzzle};--pet-harness:${A.HARNESS[pet.harness]};--pet-size:112px`;
+   const pet=P.clean(c.personal?.pet),lv=P.level(pet.xp),paint=animal=>{const coat=A.paint(animal,pet.coat);return `--pet-coat:${coat.coat};--pet-shade:${coat.shade};--pet-mane:${coat.mane};--pet-muzzle:${coat.muzzle};--pet-harness:${A.HARNESS[pet.harness]}`;},style=paint(pet.animal)+';--pet-size:112px';
+   // each animal drawn small in the current coat, standing still
+   const animal=key=>`<span class="pet" data-pose="stand" data-face="right" data-gear="${pet.gear}" data-still="true" aria-hidden="true" style="${paint(key)};--pet-size:58px">${A.svg({title:'',animal:key})}</span>`;
    const petChoices=(key,title,options,cols)=>choices(key,title,options,{value:pet[key],cols,field:'pet',data:'key'});
    const dot=(a,b)=>`<span class="cz-dot" style="background:${a}"><i style="background:${b||a}"></i></span>`;
    const need=(kind,key)=>P.unlocked(kind,key,pet.xp)?'':`Level ${P.UNLOCKS[kind][key]}`;
-   return `<div class="cz-pet-hero"><div class="pet" data-pose="${pet.enabled?'stand':'sleep'}" data-face="right" data-gear="${pet.gear}" style="${style}">${A.svg({title:pet.name})}</div><div><label class="rd-field"><span>Name</span><input type="text" maxlength="24" data-rd-field="pet" data-key="name" value="${E(pet.name)}" aria-label="Pony name"></label><p class="cz-note">Level ${lv} · ${pet.treats} treat${pet.treats===1?'':'s'}${pet.streak>1?` · ${pet.streak} days in a row`:''}</p></div></div>
+   return `<div class="cz-pet-hero"><div class="pet" data-pose="${pet.enabled?'stand':'sleep'}" data-face="right" data-gear="${pet.gear}" style="${style}">${A.svg({title:pet.name,animal:pet.animal})}</div><div><label class="rd-field"><span>Name</span><input type="text" maxlength="24" data-rd-field="pet" data-key="name" value="${E(pet.name)}" aria-label="${A.ANIMALS[pet.animal].label} name"></label><p class="cz-note">Level ${lv} · ${pet.treats} treat${pet.treats===1?'':'s'}${pet.streak>1?` · ${pet.streak} days in a row`:''}</p></div></div>
 <div class="cz-toggles">${toggle('enabled','Keep a pony','It keeps you company, tells you what is next, and enjoys a treat when work is done. It never nags.',{checked:pet.enabled,field:'pet',data:'key'})}</div>`
+    +group('Animal','The same companion, treats and level in another shape.',petChoices('animal','Animal',Object.entries(A.ANIMALS).map(([key,v])=>[key,v.label,'',animal(key)]),3))
     +group('Where it goes','',petChoices('roam','Where the pony goes',[['page','Anywhere','It walks along the tops of your modules and the bottom of the window.'],['home','Its paddock','It stays in the Paddock module on Home.'],['off','Out of sight','Hidden for now. Treats and level are kept.']],3))
     +group('Reminders','',petChoices('nudges','Reminders',[['helpful','Speaks up','Once, when something is due within three hours.'],['quiet','A small flag','Carries a flag when something is due soon. Says nothing.'],['off','None','It never mentions deadlines.']],3))
-    +group('Coat',`New coats arrive as it levels up: finish work and focus sessions to get there.`,petChoices('coat','Coat',Object.entries(A.COATS).map(([key,v])=>[key,v.label,need('coat',key),dot(v.coat,v.mane),!!need('coat',key)]),3))
+    +group('Coat',`New coats arrive as it levels up: finish work and focus sessions to get there.`,petChoices('coat','Coat',Object.keys(A.COATS).map(key=>{const v=A.paint(pet.animal,key);return [key,v.label,need('coat',key),dot(v.coat,v.mane),!!need('coat',key)];}),3))
     +group('Harness','',petChoices('harness','Harness color',Object.entries(A.HARNESS).map(([key,color])=>[key,key[0].toUpperCase()+key.slice(1),need('harness',key),dot(color),!!need('harness',key)]),3)
       +petChoices('gear','Tack',[['full','Collar and blanket',''],['collar','Collar only',''],['none','Bare','']],3))
     +(root.ReserveFeatures?.enabled?.('biscuit-more-rules')===true?group('How much Biscuit knows','',petChoices('knowledge','How much Biscuit knows',[['basic','Basic',''],['more','More',''],['most','Most','']],3)):'')

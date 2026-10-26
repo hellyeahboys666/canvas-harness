@@ -4,7 +4,7 @@
    ignoring it. Only the student's own preferences and counters are stored. Creator: Flzsh. */
 (function(root){
  'use strict';
- const DEFAULTS={enabled:true,name:'Biscuit',knowledge:'basic',coat:'oat',harness:'red',gear:'full',roam:'page',size:'medium',nudges:'helpful',treats:1,fed:0,xp:0,streakDay:'',streak:0,best:0,told:'',brain:null,skills:{},reminders:[],routines:[]};
+ const DEFAULTS={enabled:true,name:'Biscuit',animal:'pony',knowledge:'basic',coat:'oat',harness:'red',gear:'full',roam:'page',size:'medium',nudges:'helpful',treats:1,fed:0,xp:0,streakDay:'',streak:0,best:0,told:'',brain:null,skills:{},reminders:[],routines:[]};
  const Brain=()=>root.ReservePonyBrain,Ask=()=>root.ReservePonyAsk,Parse=()=>root.ReserveBiscuitParse;
  const SIZES={small:46,medium:58,large:74};
  const ROAM=['page','home','off'],NUDGES=['helpful','quiet','off'],GEAR=['full','collar','none'],KNOWLEDGE=['basic','more','most'];
@@ -21,6 +21,7 @@
   if(typeof v.enabled==='boolean')out.enabled=v.enabled;
   if(Object.hasOwn(v,'knowledge')&&KNOWLEDGE.includes(v.knowledge))out.knowledge=v.knowledge;
   if(typeof v.name==='string'&&v.name.trim())out.name=v.name.trim().slice(0,24);
+  if(typeof v.animal==='string'&&art?.ANIMALS&&Object.hasOwn(art.ANIMALS,v.animal))out.animal=v.animal;
   if(art?.COATS[v.coat])out.coat=v.coat;if(art?.HARNESS[v.harness])out.harness=v.harness;
   if(GEAR.includes(v.gear))out.gear=v.gear;if(ROAM.includes(v.roam))out.roam=v.roam;if(SIZES[v.size])out.size=v.size;if(NUDGES.includes(v.nudges))out.nudges=v.nudges;
   out.treats=v.treats===undefined?DEFAULTS.treats:int(v.treats,99);out.fed=int(v.fed,1e6);out.xp=int(v.xp,1e6);out.streak=int(v.streak,10000);out.best=Math.max(out.streak,int(v.best,10000));
@@ -81,7 +82,9 @@
   if(root.ReserveSite?.vanillaPage(root.location))return null;
   const doc=container.ownerDocument||root.document,win=doc.defaultView||root,art=root.ReservePetArt,E=value=>root.ReserveUI?.escapeHTML?root.ReserveUI.escapeHTML(value):String(value).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
   let pet=clean(getPet()),layer=null,node=null,bubble=null,dead=false,film=0,timer=0,last=0,next=0,debt=0,stepping=false,pose='stand',face='right';
-  let custom=null,drawingNode=null,customImage=null,customSource='';
+  let custom=null,drawingNode=null,drawnAnimal='',customImage=null,customSource='';
+  // the pose's numbers for this animal: a cat or a rabbit crouches to eat where the pony lowers its long neck
+  const poseOf=name=>{const own=art.ANIMALS?.[pet.animal]?.poses?.[name];return own?{...POSE[name],...own}:POSE[name]||POSE.stand;};
   let spot={ledge:null,u:160},grab=null,releaseGrab=null,menuOpen=false,focusing=false,quietUntil=pet.brain?.quietUntil||0,lastInput=now(),sayTimer=0,unseen=0;
   let thought={mood:'calm',dueToday:0,suggestions:[]},snapshot={},thoughtKey='',thoughtVersion=0,nudgeCheck='',thoughtAt=-Infinity,brainTick=0,hideTimer=0,typingUntil=0,composing=false,dragging=false,nudgeOpen=false,claiming=false,exposed=[],focusDetails={},pendingBreak=false;
   let askChoices=[],askSelected=0,askText='',bubbleVersion=0,scheduled=null,scheduleClaiming=false,commandBusy=false;const undoChanges=[];const offered=new Set(),newId=()=>`pony-${now()}-${root.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)}`;
@@ -209,12 +212,12 @@
    scheduleReel(1000/(quiet<6000?24:quiet<25000?12:6));
   }
   function refreshDrawing(){
-   const value=getCustomPet()||null;if(value===custom&&drawingNode===node)return;custom=value;customSource='';rig=null;
+   const value=getCustomPet()||null;if(value===custom&&drawingNode===node&&drawnAnimal===pet.animal)return;custom=value;customSource='';rig=null;drawnAnimal=pet.animal;
    if(custom){
     ch.leg=ch.down=0;ch.neck=9;ch.head=0;
     if(!customImage||drawingNode!==node){customImage=doc.createElement('img');customImage.className='pet-svg';customImage.alt='';customImage.draggable=false;customImage.decoding='async';customImage.setAttribute('aria-hidden','true');node.replaceChildren(customImage);}
     customImage.width=custom.size[0];customImage.height=custom.size[1];
-   }else{customImage=null;node.innerHTML=art.svg({title:pet.name});}
+   }else{customImage=null;node.innerHTML=art.svg({title:pet.name,animal:pet.animal});}
    drawingNode=node;resetReels();
   }
   function drawCustom(){
@@ -222,11 +225,11 @@
    if(customSource!==drawing.src){customSource=drawing.src;customImage.src=drawing.src;}if(customImage.style.transform!==transform)customImage.style.transform=transform;
   }
   function dress(){
-   if(!node)return;refreshDrawing();const c=art.COATS[pet.coat]||art.COATS.oat;
+   if(!node)return;refreshDrawing();const c=art.paint(pet.animal,pet.coat);
    node.style.setProperty('--pet-coat',c.coat);node.style.setProperty('--pet-shade',c.shade);node.style.setProperty('--pet-mane',c.mane);node.style.setProperty('--pet-muzzle',c.muzzle);
    node.style.setProperty('--pet-harness',art.HARNESS[pet.harness]||art.HARNESS.red);node.style.setProperty('--pet-size',size()+'px');
    node.style.width=custom?size()+'px':'';node.style.height=custom?height()+'px':'';node.style.aspectRatio=custom?`${size()} / ${height()}`:'';
-    if(node.dataset.gear!==pet.gear){node.dataset.gear=pet.gear;resetReels();}node.setAttribute('aria-label',`${pet.name}, your ${custom?'companion':'pony'}. Open ${pet.name}'s menu`);
+    if(node.dataset.gear!==pet.gear){node.dataset.gear=pet.gear;resetReels();}node.setAttribute('aria-label',`${pet.name}, your ${custom?'companion':art.ANIMALS[pet.animal].label.toLowerCase()}. Open ${pet.name}'s menu`);
     const still=String(reduced());if(node.dataset.still!==still){node.dataset.still=still;resetReels();if(still==='true'&&goal&&!goal.drop&&!grab){goal=null;speed=0;ch.leg=0;settle(focusing?'read':nudge(snapshot),30000);}}
    drawCustom();if(Number.isFinite(node._x)&&Number.isFinite(node._y))moveTo(node._x,node._y);
   }
@@ -351,11 +354,11 @@
   }
   function put(el,prop,value){if(!el)return;const seen=rig.last.get(el)||rig.last.set(el,{}).get(el);if(seen[prop]!==value){seen[prop]=value;el.style[prop]=value;}}
   function paint(){
-   if(!node)return;if(custom){const opacity=ch.alpha<.995?ch.alpha.toFixed(2):'';if(node.style.opacity!==opacity)node.style.opacity=opacity;return;}const p=parts(),leg=Math.sin(phase)*ch.leg,down=ch.down,bob=-Math.abs(Math.sin(phase))*ch.leg*.055;
+   if(!node)return;if(custom){const opacity=ch.alpha<.995?ch.alpha.toFixed(2):'';if(node.style.opacity!==opacity)node.style.opacity=opacity;return;}const p=parts(),leg=Math.sin(phase)*ch.leg,down=ch.down,bob=-Math.abs(Math.sin(phase))*ch.leg*.055,sink=art.ANIMALS?.[pet.animal]?.sink??1;
    const neck=ch.neck+(pose==='eat'?Math.sin(phase*2.4)*2.5:leg*.12),fold=(1-down/14.6).toFixed(3);
    // in the air, held, or cheering, the stylesheet poses the legs and shadow itself
    const free=pose==='fall'||pose==='held'||pose==='cheer';
-   put(p.up,'transform',`translateY(${(down+bob).toFixed(2)}px)`);
+   put(p.up,'transform',`translateY(${(down*sink+bob).toFixed(2)}px)`);
    put(p.neck,'transform',`rotate(${neck.toFixed(2)}deg)`);put(p.head,'transform',`rotate(${ch.head.toFixed(2)}deg)`);
    for(const el of p.a)put(el,'transform',free?'':`rotate(${leg.toFixed(2)}deg) scaleY(${fold})`);
    for(const el of p.b)put(el,'transform',free?'':`rotate(${(-leg).toFixed(2)}deg) scaleY(${fold})`);
@@ -428,7 +431,7 @@
   }
   function step(dt){
    let busy=false;
-   const want=POSE[goal?'stand':rest]||POSE.stand;
+   const want=poseOf(goal?'stand':rest);
    if(goal?.type==='walk'){
     if(ch.down>.6){busy=true;}            // get up first
     else{
